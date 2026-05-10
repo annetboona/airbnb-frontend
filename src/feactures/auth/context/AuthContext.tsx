@@ -1,61 +1,143 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  type ReactNode,
+} from "react"
+import api from "../../../lib/axios"
+
+// ── Types ──────────────────────────────────────────────────────────────────────
+export type AuthRole = "GUEST" | "HOST" | "ADMIN"
+
+export interface AuthUser {
+  userId: string
+  role: AuthRole
+}
+
+export interface UserProfile {
+  id: string
+  name: string
+  email: string
+  username: string
+  phone?: string
+  role: AuthRole
+}
 
 interface AuthState {
   isAuthenticated: boolean
-  user: { email: string } | null
-  login: (email: string, password: string) => boolean
+  user: AuthUser | null
+  profile: UserProfile | null
+  token: string | null
+  loginWithToken: (token: string) => Promise<void>
   logout: () => void
 }
 
+interface JwtPayload {
+  userId: string
+  role: AuthRole
+  exp: number
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+const TOKEN_KEY = "token"
+
+function decodeToken(token: string): AuthUser | null {
+  try {
+    const base64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")
+    const json = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + c.charCodeAt(0).toString(16).padStart(2, "0"))
+        .join("")
+    )
+    const payload = JSON.parse(json) as JwtPayload
+    if (payload.exp * 1000 < Date.now()) return null
+    return { userId: payload.userId, role: payload.role }
+  } catch {
+    return null
+  }
+}
+
+// ── Context ────────────────────────────────────────────────────────────────────
 const AuthContext = createContext<AuthState | null>(null)
 
-const VALID_EMAIL = "admin@gmail.com"
-const VALID_PASSWORD = "password123"
-
-const AUTH_KEY = "auth_user"
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  // Initialize state from localStorage so it survives refresh
-  const [user, setUser] = useState<{ email: string } | null>(() => {
+  const [token, setToken] = useState<string | null>(() =>
+    localStorage.getItem(TOKEN_KEY)
+  )
+  const [user, setUser] = useState<AuthUser | null>(() => {
+    const stored = localStorage.getItem(TOKEN_KEY)
+    return stored ? decodeToken(stored) : null
+  })
+  const [profile, setProfile] = useState<UserProfile | null>(null)
+
+  // ── Fetch full profile from /auth/me ────────────────────────────────────────
+  const fetchProfile = useCallback(async () => {
     try {
-      const stored = localStorage.getItem(AUTH_KEY)
-      return stored ? JSON.parse(stored) : null
+      const { data } = await api.get<{ user: UserProfile }>("/auth/me")
+      setProfile(data.user)   // backend wraps profile in { user: {...} }
     } catch {
-      return null
+      // Non-fatal — profile stays null
     }
-  })
+  }, [])
 
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    return localStorage.getItem(AUTH_KEY) !== null
-  })
-
-  // Keep localStorage in sync whenever user changes
+  // Hydrate profile on mount if token exists
   useEffect(() => {
-    if (user) {
-      localStorage.setItem(AUTH_KEY, JSON.stringify(user))
-    } else {
-      localStorage.removeItem(AUTH_KEY)
+    if (token && user) {
+      fetchProfile()
     }
-  }, [user])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
-  const login = (email: string, password: string): boolean => {
-    if (email === VALID_EMAIL && password === VALID_PASSWORD) {
-      const userData = { email }
-      setIsAuthenticated(true)
-      setUser(userData)
-      return true
+  // Clear expired token on mount
+  useEffect(() => {
+    if (token && !decodeToken(token)) {
+      logout()
     }
-    return false
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // ── loginWithToken ──────────────────────────────────────────────────────────
+  const loginWithToken = async (newToken: string) => {
+    const decoded = decodeToken(newToken)
+    if (!decoded) return
+
+    localStorage.setItem(TOKEN_KEY, newToken)
+    setToken(newToken)
+    setUser(decoded)
+
+    // Fetch full profile right after login
+    try {
+      const { data } = await api.get<{ user: UserProfile }>("/auth/me", {
+        headers: { Authorization: `Bearer ${newToken}` },
+      })
+      setProfile(data.user)   // backend wraps profile in { user: {...} }
+    } catch {
+      // Profile unavailable — proceed with JWT data only
+    }
   }
 
+  // ── logout ──────────────────────────────────────────────────────────────────
   const logout = () => {
-    setIsAuthenticated(false)
+    localStorage.removeItem(TOKEN_KEY)
+    setToken(null)
     setUser(null)
-    localStorage.removeItem(AUTH_KEY)
+    setProfile(null)
   }
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        isAuthenticated: !!user,
+        user,
+        profile,
+        token,
+        loginWithToken,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   )

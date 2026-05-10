@@ -1,16 +1,16 @@
 import type { BookingData } from "../types"
 import { CalendarCheck, User, CreditCard, Loader2 } from "lucide-react"
-import { useState } from "react"
 
 export default function StepConfirmation({
-  data, onBack, onSubmit
-}: { data: BookingData; onBack: () => void; onSubmit: () => Promise<void> }) {
-  const [loading, setLoading] = useState(false)
-
+  data, onBack, onSubmit, isSubmitting = false,
+}: {
+  data: BookingData
+  onBack: () => void
+  onSubmit: () => Promise<void>
+  isSubmitting?: boolean
+}) {
   const handleConfirm = async () => {
-    setLoading(true)
     await onSubmit()
-    setLoading(false)
   }
 
   return (
@@ -60,9 +60,9 @@ export default function StepConfirmation({
           className="flex-1 border border-gray-200 text-gray-600 hover:border-orange-400 hover:text-orange-500 font-semibold py-3 rounded-xl transition-colors">
           Back
         </button>
-        <button onClick={handleConfirm} disabled={loading}
+        <button onClick={handleConfirm} disabled={isSubmitting}
           className="flex-1 bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
-          {loading ? <><Loader2 size={16} className="animate-spin" /> Confirming…</> : "Confirm Booking"}
+          {isSubmitting ? <><Loader2 size={16} className="animate-spin" /> Confirming…</> : "Confirm Booking"}
         </button>
       </div>
     </div>

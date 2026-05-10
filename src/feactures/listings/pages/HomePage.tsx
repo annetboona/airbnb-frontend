@@ -10,7 +10,6 @@ const categories = [
   { icon: <Dumbbell size={28} />, name: "Gymnasiums", count: "21+ listings" },
 ]
 
-// Placeholder image grid — swap Rwanda for real city images as needed
 const heroImages = [Rwanda, Rwanda, Rwanda, Rwanda, Rwanda, Rwanda, Rwanda, Rwanda]
 
 function HomePage() {
@@ -35,11 +34,11 @@ function HomePage() {
         <div className="absolute inset-0 bg-black/55" />
 
         {/* Hero content */}
-        <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-6">
-          <h1 className="text-5xl md:text-6xl font-extrabold text-white leading-tight max-w-4xl">
+        <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-6 mt-15">
+          <h1 className="text-5xl md:text-6xl font-extrabold text-white leading-tight max-w-4xl mt-15">
             Just Input Your Location &amp; Find
           </h1>
-          <h2 className="text-5xl md:text-6xl font-extrabold text-white leading-tight max-w-4xl mt-1">
+          <h2 className="text-5xl md:text-6xl font-extrabold text-white leading-tight max-w-4xl mt-3">
             <span
               className="italic font-bold text-white relative inline-block"
               style={{ fontFamily: "'Georgia', serif" }}

@@ -6,16 +6,26 @@ import StepConfirmation from "./StepConfirmation"
 import { X } from "lucide-react"
 
 const STEP_LABELS = ["Dates", "Personal", "Payment", "Confirm"]
+const STEP_TITLES = ["Select Dates", "Personal Info", "Payment Details", "Confirm Booking"]
 
-export default function BookingForm({ onClose }: { onClose: () => void }) {
-  const { currentStep, data, next, back, submit } = useBooking()
+interface Props {
+  onClose: () => void
+  listingId?: string
+}
+
+export default function BookingForm({ onClose, listingId }: Props) {
+  const { currentStep, data, next, back, submit, isSubmitting } = useBooking({ listingId })
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative">
+
         {/* Close */}
-        <button onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+          aria-label="Close"
+        >
           <X size={20} />
         </button>
 
@@ -27,14 +37,22 @@ export default function BookingForm({ onClose }: { onClose: () => void }) {
           <div className="flex items-center justify-center gap-2">
             {STEP_LABELS.map((label, i) => (
               <div key={label} className="flex items-center gap-2">
-                <div className={`flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold transition-colors ${
-                  i < currentStep ? "bg-green-500 text-white"
-                  : i === currentStep ? "bg-orange-500 text-white"
-                  : "bg-gray-100 text-gray-400"
-                }`}>
+                <div
+                  className={`flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold transition-colors ${
+                    i < currentStep
+                      ? "bg-green-500 text-white"
+                      : i === currentStep
+                      ? "bg-orange-500 text-white"
+                      : "bg-gray-100 text-gray-400"
+                  }`}
+                >
                   {i < currentStep ? "✓" : i + 1}
                 </div>
-                <span className={`text-xs hidden sm:block ${i === currentStep ? "text-orange-500 font-semibold" : "text-gray-400"}`}>
+                <span
+                  className={`text-xs hidden sm:block ${
+                    i === currentStep ? "text-orange-500 font-semibold" : "text-gray-400"
+                  }`}
+                >
                   {label}
                 </span>
                 {i < STEP_LABELS.length - 1 && (
@@ -47,14 +65,21 @@ export default function BookingForm({ onClose }: { onClose: () => void }) {
 
         {/* Step title */}
         <h2 className="text-lg font-bold text-gray-900 mb-4">
-          {["Select Dates", "Personal Info", "Payment Details", "Confirm Booking"][currentStep]}
+          {STEP_TITLES[currentStep]}
         </h2>
 
         {/* Step content */}
         {currentStep === 0 && <StepDates onNext={next} defaultValues={data.dates} />}
         {currentStep === 1 && <StepPersonal onNext={next} onBack={back} defaultValues={data.personal} />}
         {currentStep === 2 && <StepPayment onNext={next} onBack={back} defaultValues={data.payment} />}
-        {currentStep === 3 && <StepConfirmation data={data} onBack={back} onSubmit={submit} />}
+        {currentStep === 3 && (
+          <StepConfirmation
+            data={data}
+            onBack={back}
+            onSubmit={submit}
+            isSubmitting={isSubmitting}
+          />
+        )}
       </div>
     </div>
   )

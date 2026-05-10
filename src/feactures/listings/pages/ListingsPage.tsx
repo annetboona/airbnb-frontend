@@ -41,7 +41,7 @@ export default function ListingsPage() {
   const filtered = useMemo(() => {
     return state.listings.filter((l) => {
       const q = state.filter.toLowerCase()
-      const matchesQuery = l.name.toLowerCase().includes(q) || l.category.toLowerCase().includes(q)
+      const matchesQuery = l.title.toLowerCase().includes(q) || l.type.toLowerCase().includes(q) || l.location.toLowerCase().includes(q)
       const matchesSaved = savedOnly ? state.saved.has(l.id) : true
       return matchesQuery && matchesSaved
     })

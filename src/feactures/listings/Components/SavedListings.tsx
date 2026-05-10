@@ -53,22 +53,29 @@ export default function SavedListings({ open, onClose }: { open: boolean; onClos
                 <p className="text-xs mt-1">Heart a listing to save it here.</p>
               </div>
             ) : (
-              savedListings.map((listing) => (
-                <div key={listing.id} className="flex items-center gap-3 bg-gray-50 rounded-xl p-3">
-                  <img src={listing.image} alt={listing.name} className="w-14 h-14 rounded-lg object-cover shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 truncate">{listing.name}</p>
-                    <p className="text-xs text-orange-500">{listing.price}</p>
-                    <p className="text-xs text-gray-400">{listing.category}</p>
+              savedListings.map((listing) => {
+                const coverImage = listing.photos[0]?.url ?? "https://placehold.co/56x56?text=No+img"
+                return (
+                  <div key={listing.id} className="flex items-center gap-3 bg-gray-50 rounded-xl p-3">
+                    <img
+                      src={coverImage}
+                      alt={listing.title}
+                      className="w-14 h-14 rounded-lg object-cover shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-900 truncate">{listing.title}</p>
+                      <p className="text-xs text-orange-500">${listing.pricePerNight}/night</p>
+                      <p className="text-xs text-gray-400 capitalize">{listing.type}</p>
+                    </div>
+                    <button
+                      onClick={() => toggle(listing.id, listing.title)}
+                      className="text-red-400 hover:text-red-600 shrink-0"
+                    >
+                      <X size={16} />
+                    </button>
                   </div>
-                  <button
-                    onClick={() => toggle(listing.id, listing.name)}
-                    className="text-red-400 hover:text-red-600 shrink-0"
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
-              ))
+                )
+              })
             )}
           </div>
         </div>

@@ -1,11 +1,17 @@
 import { useState } from "react"
-import type{ BookingData } from "../types"
-import type{ DatesData, PersonalData, PaymentData } from "../schema/booking"
 import toast from "react-hot-toast"
+import api from "../../../lib/axios"
+import type { DatesData, PersonalData, PaymentData } from "../schema/booking"
+import type { BookingData } from "../types"
 
-export function useBooking() {
+interface UseBookingOptions {
+  listingId?: string
+}
+
+export function useBooking({ listingId }: UseBookingOptions = {}) {
   const [currentStep, setCurrentStep] = useState(0)
   const [data, setData] = useState<BookingData>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const next = (stepData: DatesData | PersonalData | PaymentData) => {
     if (currentStep === 0) setData((p) => ({ ...p, dates: stepData as DatesData }))
@@ -17,12 +23,31 @@ export function useBooking() {
   const back = () => setCurrentStep((s) => Math.max(0, s - 1))
 
   const submit = async () => {
-    // Replace with real API call: await api.post("/bookings", data)
-    await new Promise((r) => setTimeout(r, 1000))
-    toast.success("Booking confirmed! 🎉")
-    setCurrentStep(0)
-    setData({})
+    if (!listingId || !data.dates) {
+      toast.error("Missing booking information")
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      await api.post("/bookings", {
+        listingId,
+        checkIn: data.dates.checkIn,
+        checkOut: data.dates.checkOut,
+        guests: data.dates.guests,
+      })
+      toast.success("Booking confirmed! 🎉")
+      setCurrentStep(0)
+      setData({})
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        "Booking failed. Please try again."
+      toast.error(msg)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
-  return { currentStep, data, next, back, submit }
+  return { currentStep, data, next, back, submit, isSubmitting }
 }

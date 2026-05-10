@@ -5,13 +5,15 @@ import "nprogress/nprogress.css"
 import Spinner from "./shared/Components/Spinner"
 import NotFound from "./shared/Components/NotFound"
 import ProtectedRoute from "./shared/Components/ProtectedRoute"
-import ListingsPage from "./feactures/listings/pages/ListingsPage"
 import LoginPage from "./feactures/auth/pages/LoginPage"
 import Navbar from "./shared/Components/Navbar"
-import HomePage from "./feactures/listings/pages/HomePage"
+import SignUp from "./feactures/auth/pages/SignUp"
 
-const DashboardPage = lazy(() => import("./feactures/auth/pages/Dashboard"))
+const HomePage      = lazy(() => import("./feactures/listings/pages/HomePage"))
+const ListingsPage  = lazy(() => import("./feactures/listings/pages/ListingsPage"))
 const ListingDetail = lazy(() => import("./feactures/listings/pages/ListingDetail"))
+const DashboardPage = lazy(() => import("./feactures/auth/pages/Dashboard"))
+
 NProgress.configure({ showSpinner: false, speed: 400 })
 
 function App() {
@@ -28,10 +30,14 @@ function App() {
       <Navbar />
       <Suspense fallback={<Spinner />}>
         <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/listings" element={<ListingsPage />} />
-          <Route path="/listings/:id" element={<ListingDetail />} />
-          <Route path="/login" element={<LoginPage />} />
+          {/* ── Public ── */}
+          <Route path="/"                        element={<HomePage />} />
+          <Route path="/listings"                element={<ListingsPage />} />
+          <Route path="/listings/:id"            element={<ListingDetail />} />
+          <Route path="/login"                   element={<LoginPage />} />
+          <Route path="/signup"                  element={<SignUp />} />
+
+          {/* ── Protected ── */}
           <Route
             path="/dashboard"
             element={
@@ -40,6 +46,8 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          {/* ── Catch-all ── */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
@@ -47,4 +55,4 @@ function App() {
   )
 }
 
-export default App;
+export default App

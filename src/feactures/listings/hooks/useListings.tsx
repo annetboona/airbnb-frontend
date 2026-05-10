@@ -1,21 +1,38 @@
 import { useQuery } from "@tanstack/react-query"
-import { useStore } from "../../../store/StoreContext"
-import { ALL_LISTINGS } from "../../../data/listings"
 import { useEffect } from "react"
-import type{ Listing } from "../../../store/type"
+import api from "../../../lib/axios"
+import { useStore } from "../../../store/StoreContext"
+import type { Listing, PaginatedListings } from "../../../store/type"
 
-// ── fetch all listings ──
-async function fetchListings() {
-  await new Promise((r) => setTimeout(r, 1500))
-  return ALL_LISTINGS
+// ── Fetch all listings (paginated) ────────────────────────────────────────────
+async function fetchListings(params?: {
+  page?: number
+  limit?: number
+  location?: string
+  type?: string
+  minPrice?: number
+  maxPrice?: number
+  guests?: number
+}): Promise<Listing[]> {
+  const { data } = await api.get<PaginatedListings>("/listings", { params })
+  return data.data
 }
 
-export function useListings() {
+export function useListings(params?: {
+  page?: number
+  limit?: number
+  location?: string
+  type?: string
+  minPrice?: number
+  maxPrice?: number
+  guests?: number
+}) {
   const { dispatch } = useStore()
 
   const query = useQuery({
-    queryKey: ["listings"],
-    queryFn: fetchListings,
+    queryKey: ["listings", params],
+    queryFn: () => fetchListings(params),
+    staleTime: 5 * 60 * 1000,
   })
 
   useEffect(() => {
@@ -27,18 +44,17 @@ export function useListings() {
   return query
 }
 
-// ── fetch single listing ──
-async function fetchListing(id: number): Promise<Listing> {
-  await new Promise((r) => setTimeout(r, 500))
-  const listing = ALL_LISTINGS.find((l) => l.id === id)
-  if (!listing) throw new Error("Listing not found")
-  return listing
+// ── Fetch single listing by UUID ──────────────────────────────────────────────
+async function fetchListing(id: string): Promise<Listing> {
+  const { data } = await api.get<Listing>(`/listings/${id}`)
+  return data
 }
 
-export function useListing(id: number | undefined) {
+export function useListing(id: string | undefined) {
   return useQuery({
     queryKey: ["listing", id],
     queryFn: () => fetchListing(id!),
     enabled: !!id,
+    staleTime: 5 * 60 * 1000,
   })
 }
