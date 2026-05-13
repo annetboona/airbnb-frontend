@@ -13,8 +13,8 @@ export interface ListingHost {
   phone?: string
 }
 
-// Matches Prisma ListingType enum exactly (schema has no APARTMENT)
-export type ListingType = "HOUSE" | "VILLA" | "CABIN"
+// Matches backend Prisma / zod listing type enum
+export type ListingType = "APARTMENT" | "HOUSE" | "VILLA" | "CABIN"
 
 export interface Listing {
   id: string                      // UUID from backend
@@ -26,7 +26,8 @@ export interface Listing {
   type: ListingType
   amenities: string[]
   rating: number | null
-  userId: string
+  /** Prisma listing owner (serialized on API responses) */
+  hostId: string
   photos: ListingPhoto[]
   host: ListingHost
   createdAt: string

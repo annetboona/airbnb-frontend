@@ -2,8 +2,23 @@ import Rwanda from "../assets/kigali1.png"
 import Uganda from "../assets/kampala.png"
 import ConversionCenter from "../assets/ConversionCenter.jpg"
 import Hotel from "../assets/Novotel.png"
-import type { Listing } from "../store/type"
-import  Appartment from "../assets/download1.png"
+import Appartment from "../assets/download1.png"
+
+/** Static demo cards — separate from API Listing */
+type LegacyPromoCard = {
+  id: number
+  image: string
+  featured: boolean
+  price: string
+  rating: number
+  reviews: number
+  name: string
+  verified: boolean
+  phone: string
+  category: string
+  location: string
+  availableFrom: string
+}
 const images = [Rwanda, Uganda, ConversionCenter, Hotel, Appartment]
 const categories = ["Apartments", "Restaurant", "Events", "Hotels", "Shopping", "Fitness"]
 const locations = ["Kigali, Rwanda", "Kampala, Uganda", "Nairobi, Kenya", "Dubai, UAE", "Lagos, Nigeria", "Dubai"]
@@ -13,7 +28,7 @@ const names = [
   "Lake Victoria Lodge", "Mombasa Beach Resort", "Addis Sky Lounge", "Dar es Salaam Suites",
 ]
 
-const base: Listing[] = [
+const base: LegacyPromoCard[] = [
   { id: 1, image: Rwanda, featured: true, price: "$12.00 - $40.00", rating: 4.5, reviews: 2391, name: "Green Mart Apartment", verified: true, phone: "(123) 456-7890", category: "Apartments", location: "Kigali, Rwanda", availableFrom: "2026-06-01" },
   { id: 2, image: Uganda, featured: true, price: "$12.00 - $40.00", rating: 4.5, reviews: 2391, name: "Chuijhal Hotel And Restaurant", verified: true, phone: "0798563776", category: "Restaurant", location: "Kampala, Uganda", availableFrom: "2026-07-15" },
   { id: 3, image: ConversionCenter, featured: false, price: "$20.00 - $80.00", rating: 4.2, reviews: 1105, name: "Kigali Convention Center", verified: true, phone: "0788888888", category: "Events", location: "Kigali, Rwanda", availableFrom: "2026-08-01" },
@@ -24,7 +39,7 @@ const base: Listing[] = [
 ]
 
 // Generate up to 50 listings
-const generated: Listing[] = Array.from({ length: 44 }, (_, i) => ({
+const generated: LegacyPromoCard[] = Array.from({ length: 44 }, (_, i) => ({
   id: i + 7,
   image: images[i % images.length],
   featured: i % 3 === 0,
@@ -39,4 +54,4 @@ const generated: Listing[] = Array.from({ length: 44 }, (_, i) => ({
   availableFrom: `2024-0${(i % 9) + 1}-${String((i % 28) + 1).padStart(2, "0")}`,
 }))
 
-export const ALL_LISTINGS: Listing[] = [...base, ...generated]
+export const ALL_LISTINGS: LegacyPromoCard[] = [...base, ...generated]

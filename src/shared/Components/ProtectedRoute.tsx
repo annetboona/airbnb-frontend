@@ -26,7 +26,7 @@ export default function ProtectedRoute({ children, roles }: Props) {
   // Role guard
   if (roles && user && !roles.includes(user.role)) {
     toast.error("You don't have permission to view this page")
-    return <Navigate to="/dashboard" replace />
+    return <Navigate to="/dashboard/overview" replace />
   }
 
   return <>{children}</>

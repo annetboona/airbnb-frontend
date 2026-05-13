@@ -1,6 +1,7 @@
 import { useState } from "react"
 import toast from "react-hot-toast"
 import api from "../../../lib/axios"
+import { useAuth } from "../../auth/hooks/useAuth"
 import type { DatesData, PersonalData, PaymentData } from "../schema/booking"
 import type { BookingData } from "../types"
 
@@ -9,6 +10,7 @@ interface UseBookingOptions {
 }
 
 export function useBooking({ listingId }: UseBookingOptions = {}) {
+  const { user } = useAuth()
   const [currentStep, setCurrentStep] = useState(0)
   const [data, setData] = useState<BookingData>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -27,10 +29,16 @@ export function useBooking({ listingId }: UseBookingOptions = {}) {
       toast.error("Missing booking information")
       return
     }
+    const guestId = user?.userId
+    if (!guestId) {
+      toast.error("Please sign in to complete your booking")
+      return
+    }
 
     setIsSubmitting(true)
     try {
       await api.post("/bookings", {
+        userId: guestId,
         listingId,
         checkIn: data.dates.checkIn,
         checkOut: data.dates.checkOut,
@@ -40,8 +48,18 @@ export function useBooking({ listingId }: UseBookingOptions = {}) {
       setCurrentStep(0)
       setData({})
     } catch (err: unknown) {
+      const res = err as { response?: { data?: { message?: string; errors?: unknown } } }
+      const data = res.response?.data
+      const flat = data?.errors as { fieldErrors?: Record<string, string[]>; formErrors?: string[] }
+      const firstField =
+        flat?.fieldErrors && Object.keys(flat.fieldErrors).length > 0
+          ? `${Object.keys(flat.fieldErrors)[0]}: ${flat.fieldErrors[Object.keys(flat.fieldErrors)[0]]?.[0]}`
+          : undefined
+      const formErr = flat?.formErrors?.[0]
       const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        formErr ??
+        firstField ??
+        data?.message ??
         "Booking failed. Please try again."
       toast.error(msg)
     } finally {

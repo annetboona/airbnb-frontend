@@ -27,7 +27,12 @@ export default function LoginPage() {
         />
 
         {/* Sign up link */}
-        <p className="text-center text-xs text-gray-400 mt-6">
+        <p className="text-center text-xs text-gray-400 mt-4">
+          <Link to="/forgot-password" className="text-gray-600 hover:text-orange-500 font-medium">
+            Forgot password?
+          </Link>
+        </p>
+        <p className="text-center text-xs text-gray-400 mt-4">
           <span className="text-gray-600">Don't have an account?</span>
           <Link
             to="/signup"

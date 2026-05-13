@@ -38,17 +38,17 @@ export const roleNavigation: Record<UserRole, RoleNavItem[]> = {
   guest: [
     { label: "Home", path: "/" },
     { label: "Listings", path: "/listings" },
-    { label: "Bookings", path: "/dashboard" },
+    { label: "Bookings", path: "/dashboard/overview" },
   ],
   host: [
     { label: "Home", path: "/" },
     { label: "Listings", path: "/listings" },
-    { label: "My Listings", path: "/dashboard" },
+    { label: "My Listings", path: "/dashboard/my-listings" },
   ],
   admin: [
     { label: "Home", path: "/" },
     { label: "Listings", path: "/listings" },
-    { label: "Admin Dashboard", path: "/dashboard" },
+    { label: "Admin Dashboard", path: "/dashboard/admin/stats" },
   ],
 };
 

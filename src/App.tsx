@@ -1,18 +1,34 @@
 import { lazy, Suspense, useEffect } from "react"
-import { Routes, Route, useLocation } from "react-router-dom"
+import { Routes, Route, useLocation, Navigate } from "react-router-dom"
 import NProgress from "nprogress"
 import "nprogress/nprogress.css"
 import Spinner from "./shared/Components/Spinner"
 import NotFound from "./shared/Components/NotFound"
 import ProtectedRoute from "./shared/Components/ProtectedRoute"
 import LoginPage from "./feactures/auth/pages/LoginPage"
+import ForgotPasswordPage from "./feactures/auth/pages/ForgotPasswordPage"
+import ResetPasswordPage from "./feactures/auth/pages/ResetPasswordPage"
 import Navbar from "./shared/Components/Navbar"
 import SignUp from "./feactures/auth/pages/SignUp"
+import DashboardLayout from "./feactures/dashboard/DashboardLayout"
+import DashboardOverview from "./feactures/dashboard/DashboardOverview"
+import DashboardProfilePage from "./feactures/dashboard/pages/DashboardProfilePage"
+import GuestBookingsPage from "./feactures/dashboard/pages/GuestBookingsPage"
+import GuestFindStayPage from "./feactures/dashboard/pages/GuestFindStayPage"
+import GuestAiAssistantPage from "./feactures/dashboard/pages/GuestAiAssistantPage"
+import HostMyListingsPage from "./feactures/dashboard/pages/HostMyListingsPage"
+import HostListingFormPage from "./feactures/dashboard/pages/HostListingFormPage"
+import HostPhotosPage from "./feactures/dashboard/pages/HostPhotosPage"
+import HostBookingRequestsPage from "./feactures/dashboard/pages/HostBookingRequestsPage"
+import HostAiDescriptionPage from "./feactures/dashboard/pages/HostAiDescriptionPage"
+import AdminStatsPage from "./feactures/dashboard/pages/AdminStatsPage"
+import AdminUsersPage from "./feactures/dashboard/pages/AdminUsersPage"
+import AdminListingsPage from "./feactures/dashboard/pages/AdminListingsPage"
+import AdminBookingsPage from "./feactures/dashboard/pages/AdminBookingsPage"
 
-const HomePage      = lazy(() => import("./feactures/listings/pages/HomePage"))
-const ListingsPage  = lazy(() => import("./feactures/listings/pages/ListingsPage"))
+const HomePage = lazy(() => import("./feactures/listings/pages/HomePage"))
+const ListingsPage = lazy(() => import("./feactures/listings/pages/ListingsPage"))
 const ListingDetail = lazy(() => import("./feactures/listings/pages/ListingDetail"))
-const DashboardPage = lazy(() => import("./feactures/auth/pages/Dashboard"))
 
 NProgress.configure({ showSpinner: false, speed: 400 })
 
@@ -30,24 +46,134 @@ function App() {
       <Navbar />
       <Suspense fallback={<Spinner />}>
         <Routes>
-          {/* ── Public ── */}
-          <Route path="/"                        element={<HomePage />} />
-          <Route path="/listings"                element={<ListingsPage />} />
-          <Route path="/listings/:id"            element={<ListingDetail />} />
-          <Route path="/login"                   element={<LoginPage />} />
-          <Route path="/signup"                  element={<SignUp />} />
+          <Route path="/" element={<HomePage />} />
+          <Route path="/listings" element={<ListingsPage />} />
+          <Route path="/listings/:id" element={<ListingDetail />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
 
-          {/* ── Protected ── */}
           <Route
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <DashboardPage />
+                <DashboardLayout />
               </ProtectedRoute>
             }
-          />
+          >
+            <Route index element={<Navigate to="overview" replace />} />
+            <Route path="overview" element={<DashboardOverview />} />
+            <Route path="profile" element={<DashboardProfilePage />} />
 
-          {/* ── Catch-all ── */}
+            <Route
+              path="bookings"
+              element={
+                <ProtectedRoute roles={["GUEST"]}>
+                  <GuestBookingsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="find-stay"
+              element={
+                <ProtectedRoute roles={["GUEST"]}>
+                  <GuestFindStayPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="assistant"
+              element={
+                <ProtectedRoute roles={["GUEST"]}>
+                  <GuestAiAssistantPage />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="my-listings"
+              element={
+                <ProtectedRoute roles={["HOST"]}>
+                  <HostMyListingsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="listings/new"
+              element={
+                <ProtectedRoute roles={["HOST"]}>
+                  <HostListingFormPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="listings/:id/edit"
+              element={
+                <ProtectedRoute roles={["HOST"]}>
+                  <HostListingFormPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="listings/:id/photos"
+              element={
+                <ProtectedRoute roles={["HOST"]}>
+                  <HostPhotosPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="requests"
+              element={
+                <ProtectedRoute roles={["HOST"]}>
+                  <HostBookingRequestsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="ai-description"
+              element={
+                <ProtectedRoute roles={["HOST"]}>
+                  <HostAiDescriptionPage />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="admin/stats"
+              element={
+                <ProtectedRoute roles={["ADMIN"]}>
+                  <AdminStatsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/users"
+              element={
+                <ProtectedRoute roles={["ADMIN"]}>
+                  <AdminUsersPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/listings"
+              element={
+                <ProtectedRoute roles={["ADMIN"]}>
+                  <AdminListingsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/bookings"
+              element={
+                <ProtectedRoute roles={["ADMIN"]}>
+                  <AdminBookingsPage />
+                </ProtectedRoute>
+              }
+            />
+          </Route>
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>

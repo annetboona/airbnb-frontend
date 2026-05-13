@@ -1,4 +1,18 @@
-import {type Listing } from "../../store/type"
+/** Legacy static marketing cards — not API `Listing` shape */
+export type LegacyPromoCard = {
+  id: number
+  image: string
+  featured: boolean
+  price: string
+  rating: number
+  reviews: number
+  name: string
+  verified: boolean
+  phone: string
+  category: string
+  location: string
+  availableFrom: string
+}
 import Rwanda from "../assets/kigali1.png"
 import Uganda from "../assets/kampala.png"
 import ConversionCenter from "../assets/ConversionCenter.jpg"
@@ -13,7 +27,7 @@ const names = [
   "Lake Victoria Lodge", "Mombasa Beach Resort", "Addis Sky Lounge", "Dar es Salaam Suites",
 ]
 
-const base: Listing[] = [
+const base: LegacyPromoCard[] = [
   { id: 1, image: Rwanda, featured: true, price: "$12.00 - $40.00", rating: 4.5, reviews: 2391, name: "Green Mart Apartment", verified: true, phone: "(123) 456-7890", category: "Apartments", location: "Kigali, Rwanda", availableFrom: "2024-06-01" },
   { id: 2, image: Uganda, featured: true, price: "$12.00 - $40.00", rating: 4.5, reviews: 2391, name: "Chuijhal Hotel And Restaurant", verified: true, phone: "0798563776", category: "Restaurant", location: "Kampala, Uganda", availableFrom: "2024-07-15" },
   { id: 3, image: ConversionCenter, featured: false, price: "$20.00 - $80.00", rating: 4.2, reviews: 1105, name: "Kigali Convention Center", verified: true, phone: "0788888888", category: "Events", location: "Kigali, Rwanda", availableFrom: "2024-08-01" },
@@ -23,7 +37,7 @@ const base: Listing[] = [
 ]
 
 // Generate 44 more starting from id 7 (base has 6, total = 50)
-const generated: Listing[] = Array.from({ length: 44 }, (_, i) => {
+const generated: LegacyPromoCard[] = Array.from({ length: 44 }, (_, i) => {
   const id = base.length + i + 1 // 7, 8, 9 ... 50
   return {
     id,
@@ -41,4 +55,4 @@ const generated: Listing[] = Array.from({ length: 44 }, (_, i) => {
   }
 })
 
-export const ALL_LISTINGS: Listing[] = [...base, ...generated]
+export const ALL_LISTINGS: LegacyPromoCard[] = [...base, ...generated]

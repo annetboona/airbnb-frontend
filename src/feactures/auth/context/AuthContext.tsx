@@ -8,7 +8,7 @@ import {
 } from "react"
 import api from "../../../lib/axios"
 
-// ── Types ──────────────────────────────────────────────────────────────────────
+// ── Types 
 export type AuthRole = "GUEST" | "HOST" | "ADMIN"
 
 export interface AuthUser {
@@ -22,7 +22,10 @@ export interface UserProfile {
   email: string
   username: string
   phone?: string
+  bio: string
   role: AuthRole
+  avatar?: string
+  createdAt: string
 }
 
 interface AuthState {
@@ -32,6 +35,7 @@ interface AuthState {
   token: string | null
   loginWithToken: (token: string) => Promise<void>
   logout: () => void
+  refreshProfile: () => Promise<void>
 }
 
 interface JwtPayload {
@@ -54,7 +58,8 @@ function decodeToken(token: string): AuthUser | null {
     )
     const payload = JSON.parse(json) as JwtPayload
     if (payload.exp * 1000 < Date.now()) return null
-    return { userId: payload.userId, role: payload.role }
+    const roleUpper = typeof payload.role === "string" ? (payload.role.trim().toUpperCase() as AuthRole) : payload.role
+    return { userId: payload.userId, role: roleUpper }
   } catch {
     return null
   }
@@ -113,13 +118,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data } = await api.get<{ user: UserProfile }>("/auth/me", {
         headers: { Authorization: `Bearer ${newToken}` },
       })
-      setProfile(data.user)   // backend wraps profile in { user: {...} }
+      setProfile(data.user) 
     } catch {
-      // Profile unavailable — proceed with JWT data only
     }
   }
 
-  // ── logout ──────────────────────────────────────────────────────────────────
   const logout = () => {
     localStorage.removeItem(TOKEN_KEY)
     setToken(null)
@@ -136,6 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         token,
         loginWithToken,
         logout,
+        refreshProfile: fetchProfile,
       }}
     >
       {children}

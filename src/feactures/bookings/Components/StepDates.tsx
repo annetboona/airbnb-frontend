@@ -6,7 +6,7 @@ import { Calendar, Users } from "lucide-react"
 export default function StepDates({ onNext, defaultValues }: { onNext: (d: DatesData) => void; defaultValues?: Partial<DatesData> }) {
   const { register, handleSubmit, formState: { errors } } = useForm<DatesData>({
     resolver: zodResolver(datesSchema),
-    defaultValues,
+    defaultValues: { guests: 2, ...defaultValues },
   })
 
   return (
@@ -31,7 +31,7 @@ export default function StepDates({ onNext, defaultValues }: { onNext: (d: Dates
         <label className="text-sm font-medium text-gray-700 flex items-center gap-2 mb-1">
           <Users size={15} className="text-orange-400" /> Guests
         </label>
-        <input type="number" min={1} max={16} {...register("guests")}
+        <input type="number" min={1} max={16} {...register("guests", { valueAsNumber: true })}
           className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-orange-400" />
         {errors.guests && <p className="text-red-500 text-xs mt-1">{errors.guests.message}</p>}
       </div>

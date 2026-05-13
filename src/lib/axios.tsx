@@ -1,22 +1,22 @@
 import axios from "axios"
 
 const api = axios.create({
-  // In dev: Vite proxies /api/v1/* → https://airbnb-xr0i.onrender.com (no CORS)
-  // In prod: set VITE_API_URL to your actual backend base URL
-  baseURL: import.meta.env.VITE_API_URL ?? "/api/v1",
+  baseURL: import.meta.env.VITE_API_URL,
   headers: { "Content-Type": "application/json" },
 })
 
 // ── Request interceptor: attach JWT ──────────────────────────────────────────
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token")   // matches AuthContext TOKEN_KEY
+  const token = localStorage.getItem("token")
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
+  }
+  if (typeof FormData !== "undefined" && config.data instanceof FormData) {
+    delete config.headers["Content-Type"]
   }
   return config
 })
 
-// ── Response interceptor: handle 401 ─────────────────────────────────────────
 api.interceptors.response.use(
   (response) => response,
   (error) => {

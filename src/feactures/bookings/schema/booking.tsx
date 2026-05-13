@@ -4,7 +4,7 @@ export const datesSchema = z
   .object({
     checkIn: z.string().min(1, "Check-in date is required"),
     checkOut: z.string().min(1, "Check-out date is required"),
-    guests: z.coerce.number().min(1, "At least 1 guest").max(16, "Max 16 guests"),
+    guests: z.number().min(1, "At least 1 guest").max(16, "Max 16 guests"),
   })
   .refine((d) => new Date(d.checkOut) > new Date(d.checkIn), {
     message: "Check-out must be after check-in",

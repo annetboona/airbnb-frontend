@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react"
-import { Heart, SlidersHorizontal, X, Search, RefreshCw } from "lucide-react"
+import { Heart, SlidersHorizontal, X, Search, RefreshCw, Sparkles } from "lucide-react"
+import toast from "react-hot-toast"
 import { useStore } from "../../../store/StoreContext"
 import { useListings } from "../hooks/useListings"
 import { useFavorites } from "../hooks/useFavorites"
@@ -7,6 +8,8 @@ import ListingCard from "../Components/ListingCard"
 import SearchBar from "../Components/SearchBar"
 import SavedListings from "../Components/SavedListings"
 import Spinner from "../../../shared/Components/Spinner"
+import api from "../../../lib/axios"
+import type { Listing } from "../../../store/type"
 
 function EmptyState({ savedOnly, onClear }: { savedOnly: boolean; onClear: () => void }) {
   return (
@@ -37,6 +40,28 @@ export default function ListingsPage() {
   const { count } = useFavorites()
   const [savedOnly, setSavedOnly] = useState(false)
   const [savedPanelOpen, setSavedPanelOpen] = useState(false)
+  const [aiQuery, setAiQuery] = useState("")
+  const [aiSearching, setAiSearching] = useState(false)
+
+  async function runAiSearch() {
+    const q = aiQuery.trim()
+    if (!q) return
+    setAiSearching(true)
+    try {
+      const { data } = await api.post<{ results: Listing[] }>("/ai/search", { query: q })
+      dispatch({ type: "SET_LISTINGS", payload: data.results })
+      toast.success(`${data.results.length} matches`)
+    } catch {
+      toast.error("Natural language search failed")
+    } finally {
+      setAiSearching(false)
+    }
+  }
+
+  function clearAiBrowse() {
+    setAiQuery("")
+    refetch()
+  }
 
   const filtered = useMemo(() => {
     return state.listings.filter((l) => {
@@ -60,7 +85,7 @@ export default function ListingsPage() {
         className="sticky top-0 z-30 flex items-center gap-4 h-16 px-6 border-b border-gray-200"
         style={{ background: "rgba(255,255,255,0.92)", backdropFilter: "blur(14px)" }}
       >
-        <span className="text-xl font-bold text-gray-900 shrink-0 tracking-tight">Finda</span>
+        <span className="text-xl font-bold text-gray-900 shrink-0 tracking-tight">Find</span>
         <SearchBar />
       </nav>
 
@@ -68,6 +93,43 @@ export default function ListingsPage() {
       <div className="text-center pt-12 pb-6 px-6">
         <h1 className="text-4xl font-bold text-gray-900 leading-tight">Find what</h1>
         <p className="text-xl font-semibold text-orange-500 mt-1">you want</p>
+      </div>
+
+      {/* Natural language AI search */}
+      <div className="max-w-3xl mx-auto px-6 mb-6">
+        <div className="rounded-2xl border border-orange-100 bg-orange-50/70 p-4 flex flex-col sm:flex-row gap-2 shadow-sm">
+          <div className="flex items-start gap-2 flex-1 min-w-0">
+            <Sparkles className="text-orange-500 shrink-0 mt-1" size={20} aria-hidden />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold uppercase tracking-wide text-orange-600 mb-1">AI search</p>
+              <input
+                value={aiQuery}
+                onChange={(e) => setAiQuery(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && runAiSearch()}
+                placeholder='search with AI"'
+                className="w-full rounded-xl border border-orange-100 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-orange-200"
+              />
+            </div>
+          </div>
+          <div className="flex gap-2 shrink-0 justify-end">
+            <button
+              type="button"
+              disabled={aiSearching}
+              onClick={() => clearAiBrowse()}
+              className="text-sm px-4 py-2 rounded-full border border-orange-200 text-orange-700 hover:bg-orange-100/80 disabled:opacity-50"
+            >
+              Show all
+            </button>
+            <button
+              type="button"
+              disabled={aiSearching}
+              onClick={() => runAiSearch()}
+              className="text-sm px-5 py-2 rounded-full bg-orange-500 hover:bg-orange-600 text-white font-semibold disabled:opacity-50"
+            >
+              {aiSearching ? "Searching…" : "Search"}
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Filter bar */}
