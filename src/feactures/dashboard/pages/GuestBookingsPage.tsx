@@ -1,13 +1,17 @@
+import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import api from "../../../lib/axios"
-import type { PaginatedBookings } from "../../../store/type"
+import type { Booking, PaginatedBookings } from "../../../store/type"
 import { useAuth } from "../../auth/hooks/useAuth"
 import { BookingsPanel } from "../dashboardPanels"
+import CancelBookingModal from "../../bookings/Components/Cancelbookingmoda"
 import toast from "react-hot-toast"
 
 export default function GuestBookingsPage() {
   const { user } = useAuth()
   const qc = useQueryClient()
+
+  const [pendingCancel, setPendingCancel] = useState<Booking | null>(null)
 
   const q = useQuery({
     queryKey: ["guest-bookings", user?.userId],
@@ -19,8 +23,9 @@ export default function GuestBookingsPage() {
   })
 
   const cancel = useMutation({
-    mutationFn: async (id: string) => {
-      await api.delete(`/bookings/${id}`)
+    // ✅ now sends reason to backend
+    mutationFn: async ({ id, reason }: { id: string; reason: string }) => {
+      await api.delete(`/bookings/${id}`, { data: { reason } })
     },
     onSuccess: () => {
       toast.success("Booking cancelled")
@@ -31,18 +36,33 @@ export default function GuestBookingsPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">My bookings</h1>
-      <p className="text-sm text-gray-500 dark:text-gray-400">Status and cancel when plans change.</p>
+      <h1 className="text-2xl font-bold text-gray-900">My bookings</h1>
+      <p className="text-sm text-gray-500">Status and cancel when plans change.</p>
+
       <BookingsPanel
         mode="guest"
         bookings={q.data ?? []}
         isLoading={q.isLoading}
         isError={q.isError}
         refetch={() => q.refetch()}
+        // ✅ Instead of cancelling immediately, open the modal
         onGuestCancel={async (id) => {
-          if (!window.confirm("Cancel this booking?")) return
-          await cancel.mutateAsync(id)
+          const booking = (q.data ?? []).find((b) => b.id === id) ?? null
+          setPendingCancel(booking ?? ({ id } as Booking))
         }}
+      />
+
+      {/* ✅ Cancel modal — only shown when a booking is selected */}
+      <CancelBookingModal
+        open={!!pendingCancel}
+        mode="guest"
+        listingTitle={pendingCancel?.listing?.title}
+        onConfirm={async (reason) => {
+          if (!pendingCancel) return
+          await cancel.mutateAsync({ id: pendingCancel.id, reason })
+          setPendingCancel(null)
+        }}
+        onClose={() => setPendingCancel(null)}
       />
     </div>
   )

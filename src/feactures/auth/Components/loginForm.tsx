@@ -77,7 +77,7 @@ export default function LoginForm({ onSuccess }: Props) {
 
       {/* Server error */}
       {serverError && (
-        <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl">
+        <div className="flex items-center gap-2 bg-orange-50 border border-orange-200 text-orange-600 text-sm px-4 py-3 rounded-xl">
           <AlertCircle size={16} className="shrink-0" />
           {serverError}
         </div>
@@ -88,11 +88,11 @@ export default function LoginForm({ onSuccess }: Props) {
         <div
           className={`flex items-center gap-3 bg-gray-50 border rounded-xl px-4 py-3 transition-colors ${
             emailError
-              ? "border-red-400 bg-red-50"
+              ? "border-orange-400 bg-orange-50"
               : "border-gray-200 focus-within:border-orange-400"
           }`}
         >
-          <Mail size={16} className={emailError ? "text-red-400" : "text-gray-400"} />
+          <Mail size={16} className={emailError ? "text-orange-400" : "text-gray-400"} />
           <input
             id="login-email"
             type="email"
@@ -105,7 +105,7 @@ export default function LoginForm({ onSuccess }: Props) {
           />
         </div>
         {emailError && (
-          <p className="text-red-500 text-xs flex items-center gap-1 px-1">
+          <p className="text-orange-500 text-xs flex items-center gap-1 px-1">
             <AlertCircle size={11} /> {emailError}
           </p>
         )}
@@ -116,11 +116,11 @@ export default function LoginForm({ onSuccess }: Props) {
         <div
           className={`flex items-center gap-3 bg-gray-50 border rounded-xl px-4 py-3 transition-colors ${
             passwordError
-              ? "border-red-400 bg-red-50"
+              ? "border-orange-400 bg-orange-50"
               : "border-gray-200 focus-within:border-orange-400"
           }`}
         >
-          <Lock size={16} className={passwordError ? "text-red-400" : "text-gray-400"} />
+          <Lock size={16} className={passwordError ? "text-orange-400" : "text-gray-400"} />
           <input
             id="login-password"
             type={showPassword ? "text" : "password"}
@@ -141,7 +141,7 @@ export default function LoginForm({ onSuccess }: Props) {
           </button>
         </div>
         {passwordError && (
-          <p className="text-red-500 text-xs flex items-center gap-1 px-1">
+          <p className="text-orange-500 text-xs flex items-center gap-1 px-1">
             <AlertCircle size={11} /> {passwordError}
           </p>
         )}

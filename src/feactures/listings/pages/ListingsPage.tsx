@@ -1,11 +1,11 @@
-import { useState, useMemo } from "react"
-import { Heart, SlidersHorizontal, X, Search, RefreshCw, Sparkles } from "lucide-react"
+import { useState, useMemo, useEffect } from "react"
+import { useSearchParams } from "react-router-dom"
+import { Heart, SlidersHorizontal, X, Search, RefreshCw, Sparkles, MapPin } from "lucide-react"
 import toast from "react-hot-toast"
 import { useStore } from "../../../store/StoreContext"
 import { useListings } from "../hooks/useListings"
 import { useFavorites } from "../hooks/useFavorites"
 import ListingCard from "../Components/ListingCard"
-import SearchBar from "../Components/SearchBar"
 import SavedListings from "../Components/SavedListings"
 import Spinner from "../../../shared/Components/Spinner"
 import api from "../../../lib/axios"
@@ -35,13 +35,23 @@ function EmptyState({ savedOnly, onClear }: { savedOnly: boolean; onClear: () =>
 }
 
 export default function ListingsPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const urlQuery    = searchParams.get("q")        ?? ""
+  const urlLocation = searchParams.get("location") ?? ""
+  const urlCategory = searchParams.get("category") ?? ""
+
   const { isLoading, isError, refetch, isFetching } = useListings()
   const { state, dispatch } = useStore()
   const { count } = useFavorites()
-  const [savedOnly, setSavedOnly] = useState(false)
+  const [savedOnly, setSavedOnly]         = useState(false)
   const [savedPanelOpen, setSavedPanelOpen] = useState(false)
-  const [aiQuery, setAiQuery] = useState("")
-  const [aiSearching, setAiSearching] = useState(false)
+  const [aiQuery, setAiQuery]             = useState("")
+  const [aiSearching, setAiSearching]     = useState(false)
+
+  // Sync URL ?q param → store filter on mount / URL change
+  useEffect(() => {
+    dispatch({ type: "SET_FILTER", payload: urlQuery })
+  }, [urlQuery, dispatch])
 
   async function runAiSearch() {
     const q = aiQuery.trim()
@@ -65,49 +75,77 @@ export default function ListingsPage() {
 
   const filtered = useMemo(() => {
     return state.listings.filter((l) => {
-      const q = state.filter.toLowerCase()
-      const matchesQuery = l.title.toLowerCase().includes(q) || l.type.toLowerCase().includes(q) || l.location.toLowerCase().includes(q)
-      const matchesSaved = savedOnly ? state.saved.has(l.id) : true
-      return matchesQuery && matchesSaved
+      const q   = state.filter.toLowerCase()
+      const loc = urlLocation.toLowerCase()
+      const cat = urlCategory.toLowerCase()
+
+      const matchesQuery    = !q   || l.title.toLowerCase().includes(q) || l.type.toLowerCase().includes(q) || l.location.toLowerCase().includes(q)
+      const matchesLocation = !loc || l.location.toLowerCase().includes(loc)
+      const matchesCategory = !cat || l.type.toLowerCase() === cat.toLowerCase()
+      const matchesSaved    = savedOnly ? state.saved.has(l.id) : true
+
+      return matchesQuery && matchesLocation && matchesCategory && matchesSaved
     })
-  }, [state.listings, state.filter, state.saved, savedOnly])
+  }, [state.listings, state.filter, state.saved, savedOnly, urlLocation, urlCategory])
 
   const clearAll = () => {
     dispatch({ type: "SET_FILTER", payload: "" })
     dispatch({ type: "RESET" })
     setSavedOnly(false)
+    setSearchParams({})
   }
 
+  const hasActiveFilters = urlQuery || urlLocation || urlCategory
+
   return (
-    <div className="min-h-screen bg-gray-100 font-sans">
-      {/* Navbar */}
-      <nav
-        className="sticky top-0 z-30 flex items-center gap-4 h-16 px-6 border-b border-gray-200"
-        style={{ background: "rgba(255,255,255,0.92)", backdropFilter: "blur(14px)" }}
-      >
-        <span className="text-xl font-bold text-gray-900 shrink-0 tracking-tight">Find</span>
-        <SearchBar />
-      </nav>
+    <div className="min-h-screen bg-gray-50 font-sans">
 
       {/* Hero */}
-      <div className="text-center pt-12 pb-6 px-6">
+      <div className="bg-white border-b border-gray-100 text-center pt-12 pb-8 px-6">
         <h1 className="text-4xl font-bold text-gray-900 leading-tight">Find what</h1>
         <p className="text-xl font-semibold text-orange-500 mt-1">you want</p>
       </div>
 
+      {/* Active filter chips */}
+      {hasActiveFilters && (
+        <div className="max-w-3xl mx-auto px-6 pt-4 flex flex-wrap gap-2">
+          {urlQuery && (
+            <span className="flex items-center gap-1.5 bg-orange-100 text-orange-700 text-xs font-semibold px-3 py-1.5 rounded-full">
+              <Search size={12} /> "{urlQuery}"
+            </span>
+          )}
+          {urlLocation && (
+            <span className="flex items-center gap-1.5 bg-orange-100 text-orange-700 text-xs font-semibold px-3 py-1.5 rounded-full">
+              <MapPin size={12} /> {urlLocation}
+            </span>
+          )}
+          {urlCategory && (
+            <span className="flex items-center gap-1.5 bg-orange-100 text-orange-700 text-xs font-semibold px-3 py-1.5 rounded-full capitalize">
+              {urlCategory.toLowerCase()}
+            </span>
+          )}
+          <button
+            onClick={clearAll}
+            className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 px-2 transition-colors"
+          >
+            <X size={12} /> Clear
+          </button>
+        </div>
+      )}
+
       {/* Natural language AI search */}
-      <div className="max-w-3xl mx-auto px-6 mb-6">
-        <div className="rounded-2xl border border-orange-100 bg-orange-50/70 p-4 flex flex-col sm:flex-row gap-2 shadow-sm">
+      <div className="max-w-3xl mx-auto px-6 pt-4 mb-6">
+        <div className="rounded-2xl border border-orange-100 bg-white p-4 flex flex-col sm:flex-row gap-2 shadow-sm">
           <div className="flex items-start gap-2 flex-1 min-w-0">
             <Sparkles className="text-orange-500 shrink-0 mt-1" size={20} aria-hidden />
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold uppercase tracking-wide text-orange-600 mb-1">AI search</p>
+              <p className="text-xs font-bold uppercase tracking-wide text-orange-600 mb-1">AI Search</p>
               <input
                 value={aiQuery}
                 onChange={(e) => setAiQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && runAiSearch()}
-                placeholder='search with AI"'
-                className="w-full rounded-xl border border-orange-100 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-orange-200"
+                placeholder="e.g. cozy villa with a pool near the beach…"
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-300 transition"
               />
             </div>
           </div>
@@ -115,16 +153,16 @@ export default function ListingsPage() {
             <button
               type="button"
               disabled={aiSearching}
-              onClick={() => clearAiBrowse()}
-              className="text-sm px-4 py-2 rounded-full border border-orange-200 text-orange-700 hover:bg-orange-100/80 disabled:opacity-50"
+              onClick={clearAiBrowse}
+              className="text-sm px-4 py-2 rounded-full border border-orange-500 text-gray-700 hover:text-white hover:bg-orange-500 disabled:opacity-50 transition-colors"
             >
               Show all
             </button>
             <button
               type="button"
               disabled={aiSearching}
-              onClick={() => runAiSearch()}
-              className="text-sm px-5 py-2 rounded-full bg-orange-500 hover:bg-orange-600 text-white font-semibold disabled:opacity-50"
+              onClick={runAiSearch}
+              className="text-sm px-5 py-2 rounded-full bg-orange-500 hover:bg-orange-600 text-white font-semibold disabled:opacity-50 transition-colors"
             >
               {aiSearching ? "Searching…" : "Search"}
             </button>
@@ -138,14 +176,14 @@ export default function ListingsPage() {
           {isFetching && !isLoading && <span className="text-orange-400 mr-2">Refreshing…</span>}
           {savedOnly
             ? <> Showing <span className="font-bold text-gray-900">{filtered.length}</span> saved</>
-            : <> All <span className="font-bold text-gray-900">{filtered.length}</span> listings found</>
+            : <> <span className="font-bold text-gray-900">{filtered.length}</span> listings found</>
           }
         </p>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setSavedPanelOpen(true)}
             className={`flex items-center gap-1.5 text-sm font-medium px-4 py-1.5 rounded-full border transition-all duration-200 ${
-              count > 0 ? "bg-red-500 border-red-500 text-white" : "bg-white border-gray-200 text-gray-600 hover:border-red-400 hover:text-red-500"
+              count > 0 ? "bg-orange-500 border-orange-500 text-white" : "bg-white border-gray-200 text-gray-600 hover:border-orange-400 hover:text-orange-500"
             }`}
           >
             <Heart size={13} fill={count > 0 ? "white" : "none"} />
@@ -161,7 +199,7 @@ export default function ListingsPage() {
             {savedOnly ? "All listings" : "Saved only"}
           </button>
           <button
-            onClick={() => dispatch({ type: "RESET" })}
+            onClick={clearAll}
             className="flex items-center gap-1.5 text-sm font-medium px-4 py-1.5 rounded-full border border-gray-200 bg-white text-gray-600 hover:border-orange-400 hover:text-orange-500 transition-colors"
           >
             <X size={13} /> Clear All

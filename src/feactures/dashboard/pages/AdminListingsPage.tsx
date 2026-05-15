@@ -20,8 +20,10 @@ export default function AdminListingsPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white">All listings</h1>
-      <p className="text-sm text-gray-500 dark:text-gray-400">Browse every listing; opens the public detail page (management stays with hosts).</p>
+      <h1 className="text-2xl font-bold text-gray-900">All Listings</h1>
+      <p className="text-sm text-gray-500">
+        Browse every listing — management stays with hosts.
+      </p>
       <HostListingsManagePanel
         title="All listings"
         primaryCta={null}

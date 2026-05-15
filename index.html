@@ -7,11 +7,8 @@
     <title>AIRBNB</title>
 
     <script>
-      const theme = localStorage.getItem("theme");
-      if (theme === "light") {
-        document.documentElement.classList.add("light");
-      } else {
-        document.documentElement.classList.remove("light");
+      if (localStorage.getItem("theme") === "dark") {
+        document.documentElement.classList.add("dark");
       }
     </script>
 

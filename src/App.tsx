@@ -16,6 +16,7 @@ import DashboardProfilePage from "./feactures/dashboard/pages/DashboardProfilePa
 import GuestBookingsPage from "./feactures/dashboard/pages/GuestBookingsPage"
 import GuestFindStayPage from "./feactures/dashboard/pages/GuestFindStayPage"
 import GuestAiAssistantPage from "./feactures/dashboard/pages/GuestAiAssistantPage"
+import GuestBecomeHostPage from "./feactures/dashboard/pages/Guestbecomehostpage "
 import HostMyListingsPage from "./feactures/dashboard/pages/HostMyListingsPage"
 import HostListingFormPage from "./feactures/dashboard/pages/HostListingFormPage"
 import HostPhotosPage from "./feactures/dashboard/pages/HostPhotosPage"
@@ -25,13 +26,23 @@ import AdminStatsPage from "./feactures/dashboard/pages/AdminStatsPage"
 import AdminUsersPage from "./feactures/dashboard/pages/AdminUsersPage"
 import AdminListingsPage from "./feactures/dashboard/pages/AdminListingsPage"
 import AdminBookingsPage from "./feactures/dashboard/pages/AdminBookingsPage"
+import AdminHostRequestsPage from "./feactures/dashboard/pages/Adminhostrequestspage"
+import { useAuth } from "./feactures/auth/hooks/useAuth"
+
 
 const HomePage = lazy(() => import("./feactures/listings/pages/HomePage"))
 const ListingsPage = lazy(() => import("./feactures/listings/pages/ListingsPage"))
 const ListingDetail = lazy(() => import("./feactures/listings/pages/ListingDetail"))
 
 NProgress.configure({ showSpinner: false, speed: 400 })
+function DashboardIndex() {
+  const { user, profile } = useAuth()
+  const role = profile?.role || user?.role
 
+  if (role === "ADMIN") return <Navigate to="/dashboard/admin/stats" replace />
+  if (role === "HOST")  return <Navigate to="/dashboard/overview" replace />
+  return <Navigate to="/dashboard/overview" replace />
+}
 function App() {
   const location = useLocation()
 
@@ -40,6 +51,8 @@ function App() {
     const t = setTimeout(() => NProgress.done(), 100)
     return () => clearTimeout(t)
   }, [location])
+
+
 
   return (
     <>
@@ -62,10 +75,11 @@ function App() {
               </ProtectedRoute>
             }
           >
-            <Route index element={<Navigate to="overview" replace />} />
+            <Route index element={<DashboardIndex />} />
             <Route path="overview" element={<DashboardOverview />} />
             <Route path="profile" element={<DashboardProfilePage />} />
 
+            {/* ── Guest ───────────────────────────────────────────────────── */}
             <Route
               path="bookings"
               element={
@@ -90,7 +104,16 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="become-host"
+              element={
+                <ProtectedRoute roles={["GUEST"]}>
+                  <GuestBecomeHostPage />
+                </ProtectedRoute>
+              }
+            />
 
+            {/* ── Host ────────────────────────────────────────────────────── */}
             <Route
               path="my-listings"
               element={
@@ -140,6 +163,7 @@ function App() {
               }
             />
 
+            {/* ── Admin ───────────────────────────────────────────────────── */}
             <Route
               path="admin/stats"
               element={
@@ -169,6 +193,14 @@ function App() {
               element={
                 <ProtectedRoute roles={["ADMIN"]}>
                   <AdminBookingsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/host-requests"
+              element={
+                <ProtectedRoute roles={["ADMIN"]}>
+                  <AdminHostRequestsPage />
                 </ProtectedRoute>
               }
             />

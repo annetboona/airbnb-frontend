@@ -19,7 +19,12 @@ function normalizePaginatedListingResponse(res: AxiosResponse<PaginatedListings 
   return { listings: data, totalItems }
 }
 
-async function fetchListingsSubset(): Promise<Listing[]> {
+async function fetchHostListings(): Promise<Listing[]> {
+  const res = await api.get("/listings/host")
+  return normalizePaginatedListingResponse(res).listings
+}
+
+async function fetchAllListingsForAdmin(): Promise<Listing[]> {
   const res = await api.get("/listings", { params: { limit: 200, page: 1 } })
   return normalizePaginatedListingResponse(res).listings
 }
@@ -28,6 +33,7 @@ export default function DashboardOverview() {
   const { user, profile } = useAuth()
   const role = user?.role ?? "GUEST"
 
+  // ── Bookings ──────────────────────────────────────────────────────────────
   const bookingsQuery = useQuery({
     queryKey: ["bookings-dash", role, user?.userId],
     queryFn: async () => {
@@ -51,12 +57,20 @@ export default function DashboardOverview() {
     enabled: role === "HOST",
   })
 
-  const listingsQuery = useQuery({
-    queryKey: ["dashboard-listings-shell", role, user?.userId],
-    queryFn: fetchListingsSubset,
-    enabled: !!user?.userId && (role === "HOST" || role === "ADMIN"),
+  // ── Listings ──────────────────────────────────────────────────────────────
+  const hostListingsQuery = useQuery({
+    queryKey: ["host-listings-dash", user?.userId],
+    queryFn: fetchHostListings,
+    enabled: role === "HOST",
   })
 
+  const adminListingsQuery = useQuery({
+    queryKey: ["admin-listings-dash"],
+    queryFn: fetchAllListingsForAdmin,
+    enabled: role === "ADMIN",
+  })
+
+  // ── Stats (admin only) ────────────────────────────────────────────────────
   const statsQuery = useQuery({
     queryKey: ["listings-stats"],
     queryFn: async () => {
@@ -75,76 +89,106 @@ export default function DashboardOverview() {
     enabled: role === "ADMIN",
   })
 
-  let bookingsForStats: Booking[] = []
-  if (role === "HOST") bookingsForStats = hostBookingsQuery.data ?? []
-  else bookingsForStats = bookingsQuery.data ?? []
+  // ── Derived data ──────────────────────────────────────────────────────────
+  const bookingsForStats: Booking[] =
+    role === "HOST" ? (hostBookingsQuery.data ?? []) : (bookingsQuery.data ?? [])
 
-  const filteredHostListings = (listingsQuery.data ?? []).filter((l) =>
-    role === "HOST" ? l.hostId === user?.userId : true
-  )
+  const hostListings: Listing[] = hostListingsQuery.data ?? []
+  const adminListings: Listing[] = adminListingsQuery.data ?? []
 
+  // ── Stat cards — only orange, gray-100, gray-700, white ──────────────────
   const stats =
     role === "GUEST"
       ? [
-          { label: "Total bookings", value: bookingsForStats.length, color: "text-orange-500", bg: "bg-orange-50" },
+          {
+            label: "Total bookings",
+            value: bookingsForStats.length,
+            color: "text-orange-500",
+            bg: "bg-white",
+          },
           {
             label: "Confirmed",
             value: bookingsForStats.filter((b) => b.status === "CONFIRMED").length,
-            color: "text-green-600",
-            bg: "bg-green-50 bg-green-900/20",
+            color: "text-gray-700",
+            bg: "bg-gray-100",
           },
           {
             label: "Pending / cancelled",
             value: bookingsForStats.filter((b) => b.status !== "CONFIRMED").length,
-            color: "text-red-500",
-            bg: "bg-red-50 bg-red-900/20",
+            color: "text-orange-500",
+            bg: "bg-white",
           },
         ]
       : role === "HOST"
       ? [
-          { label: "Active listings", value: filteredHostListings.length, color: "text-orange-500", bg: "bg-orange-50 bg-orange-900/20" },
+          {
+            label: "Active listings",
+            value: hostListings.length,
+            color: "text-orange-500",
+            bg: "bg-gray-100",
+          },
           {
             label: "Avg price / night",
-            value: filteredHostListings.length
-              ? `$${(filteredHostListings.reduce((s, l) => s + l.pricePerNight, 0) / filteredHostListings.length).toFixed(0)}`
+            value: hostListings.length
+              ? `$${(hostListings.reduce((s, l) => s + l.pricePerNight, 0) / hostListings.length).toFixed(0)}`
               : "—",
-            color: "text-blue-500",
-            bg: "bg-blue-50 bg-blue-900/20",
+            color: "text-gray-700",
+            bg: "bg-white",
           },
           {
             label: "Booking requests",
             value: bookingsForStats.length,
-            color: "text-purple-500",
-            bg: "bg-purple-50 bg-purple-900/20",
+            color: "text-orange-500",
+            bg: "bg-gray-100",
           },
         ]
       : [
-          { label: "All listings", value: (listingsQuery.data ?? []).length, color: "text-orange-500", bg: "bg-orange-50 bg-orange-900/20" },
-          { label: "All bookings", value: bookingsForStats.length, color: "text-blue-500", bg: "bg-blue-50 bg-blue-900/20" },
+          {
+            label: "All listings",
+            value: adminListings.length,
+            color: "text-white",
+            bg: "bg-orange-500",
+          },
+          {
+            label: "All bookings",
+            value: bookingsForStats.length,
+            color: "text-gray-700",
+            bg: "bg-gray-100",
+          },
           {
             label: "Avg price platform",
-            value: statsQuery.data?.averagePrice != null ? `$${statsQuery.data.averagePrice.toFixed(0)}` : "—",
-            color: "text-green-600",
-            bg: "bg-green-50 bg-green-900/20",
+            value:
+              statsQuery.data?.averagePrice != null
+                ? `$${statsQuery.data.averagePrice.toFixed(0)}`
+                : "—",
+            color: "text-white",
+            bg: "bg-orange-500",
           },
         ]
 
   return (
     <div className="space-y-8">
+      {/* Header */}
       <div>
-        <h1 className="text-2xl font-boldtext-white mb-1">Welcome back{displayName(profile)}</h1>
-        <p className="text-sm text-gray-400">Here&apos;s what&apos;s happening on your account.</p>
+        <h1 className="text-2xl font-bold text-gray-700 mb-1">
+          Welcome back{displayName(profile)}
+        </h1>
+        <p className="text-sm text-gray-700/60">
+          Here&apos;s what&apos;s happening on your account.
+        </p>
       </div>
 
+      {/* Admin stats banner */}
       {role === "ADMIN" && (
         <StatsSummaryBanner
           totalUsers={userStatsQuery.data?.totalUsers}
-          totalListings={statsQuery.data?.totalListings ?? (listingsQuery.data ?? []).length}
+          totalListings={statsQuery.data?.totalListings ?? adminListings.length}
           avgPrice={statsQuery.data?.averagePrice}
           totalBookings={bookingsForStats.length}
         />
       )}
 
+      {/* Stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {stats.map((s) => (
           <StatCard key={s.label} {...s} />
@@ -157,75 +201,85 @@ export default function DashboardOverview() {
           <>
             <NavLink
               to="/dashboard/bookings"
-              className="text-xs font-semibold bg-white border border-gray-200 px-4 py-2 rounded-full hover:border-orange-400"
+              className="text-xs font-semibold bg-white border border-gray-100 text-gray-700 px-4 py-2 rounded-full hover:border-orange-400 hover:text-orange-500 transition-colors"
             >
               Open my bookings →
             </NavLink>
             <NavLink
               to="/dashboard/assistant"
-              className="text-xs font-semibold bg-orange-500 text-white px-4 py-2 rounded-full hover:bg-orange-600"
+              className="text-xs font-semibold bg-orange-500 text-white px-4 py-2 rounded-full hover:bg-orange-600 transition-colors"
             >
               AI assistant →
             </NavLink>
-            <NavLink to="/dashboard/find-stay" className="text-xs font-semibold text-orange-600 hover:underline">
+            <NavLink
+              to="/dashboard/find-stay"
+              className="text-xs font-semibold text-orange-500 hover:underline"
+            >
               Book a listing
             </NavLink>
           </>
         )}
+
         {role === "HOST" && (
           <>
             <NavLink
               to="/dashboard/requests"
-              className="text-xs font-semibold bg-white border-gray-200 px-4 py-2 rounded-full hover:border-orange-400"
+              className="text-xs font-semibold bg-white border border-gray-100 text-gray-700 px-4 py-2 rounded-full hover:border-orange-400 hover:text-orange-500 transition-colors"
             >
               Review booking requests →
             </NavLink>
             <NavLink
-              to="/dashboard/listings/new"
-              className="text-xs font-semibold bg-orange-500 text-white px-4 py-2 rounded-full hover:bg-orange-600"
+              to="/dashboard/ai-description"
+              className="text-xs font-semibold text-orange-500 hover:underline"
             >
-              Create listing +
-            </NavLink>
-            <NavLink to="/dashboard/ai-description" className="text-xs font-semibold text-orange-600 hover:underline">
               AI listing copy →
             </NavLink>
           </>
         )}
+
         {role === "ADMIN" && (
           <>
-            <NavLink to="/dashboard/admin/users" className="text-xs font-semibold border border-gray-200 px-4 py-2 rounded-full hover:border-orange-400">
+            <NavLink
+              to="/dashboard/admin/users"
+              className="text-xs font-semibold bg-white border border-gray-100 text-gray-700 px-4 py-2 rounded-full hover:border-orange-400 hover:text-orange-500 transition-colors"
+            >
               Manage users →
             </NavLink>
-            <NavLink to="/dashboard/admin/bookings" className="text-xs font-semibold border border-gray-200 px-4 py-2 rounded-full hover:border-orange-400">
-              All bookings →
+            <NavLink
+              to="/dashboard/admin/host-requests"
+              className="text-xs font-semibold bg-orange-500 text-white px-4 py-2 rounded-full hover:bg-orange-600 transition-colors"
+            >
+              Host requests →
             </NavLink>
           </>
         )}
       </div>
 
+      {/* HOST panels */}
       {role === "HOST" && (
         <>
           <BookingsPanel
             mode="host"
-            bookings={bookingsForStats.slice(0, 5)}
+            bookings={bookingsForStats}
             isLoading={hostBookingsQuery.isLoading}
             isError={hostBookingsQuery.isError}
             refetch={() => hostBookingsQuery.refetch()}
             emptyLabel="When guests book your places, requests show up here."
           />
           <HostListingsManagePanel
-            listings={filteredHostListings}
-            isLoading={listingsQuery.isLoading}
-            isError={listingsQuery.isError}
-            refetch={() => listingsQuery.refetch()}
+            listings={hostListings}
+            isLoading={hostListingsQuery.isLoading}
+            isError={hostListingsQuery.isError}
+            refetch={() => hostListingsQuery.refetch()}
           />
         </>
       )}
 
+      {/* GUEST panel */}
       {role === "GUEST" && (
         <BookingsPanel
           mode="guest"
-          bookings={bookingsForStats.slice(0, 8)}
+          bookings={bookingsForStats}
           isLoading={bookingsQuery.isLoading}
           isError={bookingsQuery.isError}
           refetch={() => bookingsQuery.refetch()}
@@ -233,11 +287,12 @@ export default function DashboardOverview() {
         />
       )}
 
+      {/* ADMIN panels */}
       {role === "ADMIN" && (
         <>
           <BookingsPanel
             mode="admin"
-            bookings={bookingsForStats.slice(0, 12)}
+            bookings={bookingsForStats}
             isLoading={bookingsQuery.isLoading}
             isError={bookingsQuery.isError}
             refetch={() => bookingsQuery.refetch()}
@@ -246,10 +301,10 @@ export default function DashboardOverview() {
             title="All listings"
             primaryCta={null}
             readOnly
-            listings={listingsQuery.data ?? []}
-            isLoading={listingsQuery.isLoading}
-            isError={listingsQuery.isError}
-            refetch={() => listingsQuery.refetch()}
+            listings={adminListings}
+            isLoading={adminListingsQuery.isLoading}
+            isError={adminListingsQuery.isError}
+            refetch={() => adminListingsQuery.refetch()}
           />
         </>
       )}

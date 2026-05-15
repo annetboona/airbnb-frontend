@@ -25,8 +25,8 @@ export default function DashboardLayout() {
   const linkClass = (isActive: boolean) =>
     `group flex w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
       isActive
-        ? "bg-orange-50 text-orange-500"
-        : "text-gray-600 hover:bg-gray-50 hover:text-orange-500"
+        ? "bg-orange-400 text-white"
+        : "text-gray-600 hover:bg-gray-100 hover:text-orange-500"
     }`
 
   const SidebarContent = () => (
@@ -35,10 +35,10 @@ export default function DashboardLayout() {
         <span
           className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${
             role === "ADMIN"
-              ? "bg-red-100 text-red-600"
+              ? "bg-r-100 text-orange-600"
               : role === "HOST"
-              ? "bg-amber-100 text-amber-700"
-              : "bg-blue-100 text-blue-600"
+              ? "bg-orange-400 text-gray-100"
+              : "bg-gray-200 text-orange-700"
           }`}
         >
           {role}
@@ -81,7 +81,7 @@ export default function DashboardLayout() {
         <button
           type="button"
           onClick={handleLogout}
-          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-500 transition-colors"
+          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-orange-300 hover:text-gray-200 transition-colors"
         >
           <LogOut size={18} />
           Sign out

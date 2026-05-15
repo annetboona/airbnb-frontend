@@ -9,8 +9,7 @@ export default function ListingCard({ listing, index }: { listing: Listing; inde
   const { toggle, isSaved } = useFavorites()
   const saved = isSaved(listing.id)
 
-  const coverImage = listing.photos[0]?.url ?? "https://placehold.co/400x260?text=No+Image"
-
+const coverImage = listing.photos?.[0]?.url ?? "https://placehold.co/400x260?text=No+Image"
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -77,7 +76,7 @@ export default function ListingCard({ listing, index }: { listing: Listing; inde
         <div className="flex items-center justify-between text-sm text-gray-500 border-t border-gray-100 pt-3">
           <div className="flex items-center gap-1.5">
             <MapPin size={13} className="text-gray-400" />
-            <span className="truncate max-w-[110px]">{listing.location}</span>
+            <span className="truncate max-w-110px">{listing.location}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <Users size={13} className="text-gray-400" />

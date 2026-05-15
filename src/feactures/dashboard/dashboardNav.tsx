@@ -10,7 +10,8 @@ import {
   Sparkles,
   BarChart2,
   Users,
-  Home,
+  GitPullRequestIcon,
+  UserPlus,
 } from "lucide-react"
 import type { AuthRole } from "../auth/context/AuthContext"
 
@@ -33,10 +34,11 @@ export function getDashboardNav(role: AuthRole): SidebarGroup[] {
       {
         heading: "Guest",
         items: [
-          { label: "Overview", to: "/dashboard/overview", Icon: LayoutDashboard },
-          { label: "My bookings", to: "/dashboard/bookings", Icon: CalendarCheck },
-          { label: "Book a listing", to: "/dashboard/find-stay", Icon: Compass },
-          { label: "AI assistant", to: "/dashboard/assistant", Icon: MessageSquare },
+          { label: "Overview",       to: "/dashboard/overview",      Icon: LayoutDashboard },
+          { label: "My bookings",    to: "/dashboard/bookings",      Icon: CalendarCheck   },
+          { label: "Book a listing", to: "/dashboard/find-stay",     Icon: Compass         },
+          { label: "AI assistant",   to: "/dashboard/assistant",     Icon: MessageSquare   },
+          { label: "Become a Host",  to: "/dashboard/become-host",   Icon: UserPlus        },
         ],
       },
       profile,
@@ -48,26 +50,25 @@ export function getDashboardNav(role: AuthRole): SidebarGroup[] {
       {
         heading: "Host",
         items: [
-          { label: "Overview", to: "/dashboard/overview", Icon: LayoutDashboard },
-          { label: "My listings", to: "/dashboard/my-listings", Icon: List },
-          { label: "Create listing", to: "/dashboard/listings/new", Icon: PlusCircle },
-          { label: "Booking requests", to: "/dashboard/requests", Icon: CalendarCheck },
-          { label: "AI description", to: "/dashboard/ai-description", Icon: Sparkles },
+          { label: "Overview",         to: "/dashboard/overview",       Icon: LayoutDashboard },
+          { label: "My listings",      to: "/dashboard/my-listings",    Icon: List            },
+          { label: "Create listing",   to: "/dashboard/listings/new",   Icon: PlusCircle      },
+          { label: "Booking requests", to: "/dashboard/requests",       Icon: CalendarCheck   },
+          { label: "AI description",   to: "/dashboard/ai-description", Icon: Sparkles        },
         ],
       },
       profile,
     ]
   }
 
+  // ADMIN — first item is the default landing page
   return [
     {
       heading: "Admin",
       items: [
-        { label: "Overview", to: "/dashboard/overview", Icon: LayoutDashboard },
-        { label: "Stats overview", to: "/dashboard/admin/stats", Icon: BarChart2 },
-        { label: "All users", to: "/dashboard/admin/users", Icon: Users },
-        { label: "All listings", to: "/dashboard/admin/listings", Icon: Home },
-        { label: "All bookings", to: "/dashboard/admin/bookings", Icon: CalendarCheck },
+        { label: "Stats overview",  to: "/dashboard/admin/stats",          Icon: BarChart2          },
+        { label: "All users",       to: "/dashboard/admin/users",          Icon: Users              },
+        { label: "Host Requests",   to: "/dashboard/admin/host-requests",  Icon: GitPullRequestIcon },
       ],
     },
     profile,

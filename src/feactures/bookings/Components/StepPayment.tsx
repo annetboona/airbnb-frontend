@@ -19,7 +19,7 @@ export default function StepPayment({
         </label>
         <input {...register("card")} placeholder="1234567890123456" maxLength={16}
           className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-orange-400 font-mono" />
-        {errors.card && <p className="text-red-500 text-xs mt-1">{errors.card.message}</p>}
+        {errors.card && <p className="text-orange-500 text-xs mt-1">{errors.card.message}</p>}
       </div>
 
       <div className="grid grid-cols-2 gap-3">
@@ -27,7 +27,7 @@ export default function StepPayment({
           <label className="text-sm font-medium text-gray-700 mb-1 block">Expiry (MM/YY)</label>
           <input {...register("expiry")} placeholder="08/26" maxLength={5}
             className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-orange-400 font-mono" />
-          {errors.expiry && <p className="text-red-500 text-xs mt-1">{errors.expiry.message}</p>}
+          {errors.expiry && <p className="text-orange-500 text-xs mt-1">{errors.expiry.message}</p>}
         </div>
         <div>
           <label className="text-sm font-medium text-gray-700 flex items-center gap-1 mb-1">
@@ -35,7 +35,7 @@ export default function StepPayment({
           </label>
           <input {...register("cvv")} placeholder="123" maxLength={3} type="password"
             className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-orange-400 font-mono" />
-          {errors.cvv && <p className="text-red-500 text-xs mt-1">{errors.cvv.message}</p>}
+          {errors.cvv && <p className="text-orange-500 text-xs mt-1">{errors.cvv.message}</p>}
         </div>
       </div>
 

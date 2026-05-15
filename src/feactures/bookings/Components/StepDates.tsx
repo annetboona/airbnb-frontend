@@ -17,7 +17,7 @@ export default function StepDates({ onNext, defaultValues }: { onNext: (d: Dates
         </label>
         <input type="date" {...register("checkIn")}
           className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-orange-400" />
-        {errors.checkIn && <p className="text-red-500 text-xs mt-1">{errors.checkIn.message}</p>}
+        {errors.checkIn && <p className="text-orange-500 text-xs mt-1">{errors.checkIn.message}</p>}
       </div>
       <div>
         <label className="text-sm font-medium text-gray-700 flex items-center gap-2 mb-1">
@@ -25,7 +25,7 @@ export default function StepDates({ onNext, defaultValues }: { onNext: (d: Dates
         </label>
         <input type="date" {...register("checkOut")}
           className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-orange-400" />
-        {errors.checkOut && <p className="text-red-500 text-xs mt-1">{errors.checkOut.message}</p>}
+        {errors.checkOut && <p className="text-orange-500 text-xs mt-1">{errors.checkOut.message}</p>}
       </div>
       <div>
         <label className="text-sm font-medium text-gray-700 flex items-center gap-2 mb-1">
@@ -33,7 +33,7 @@ export default function StepDates({ onNext, defaultValues }: { onNext: (d: Dates
         </label>
         <input type="number" min={1} max={16} {...register("guests", { valueAsNumber: true })}
           className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-orange-400" />
-        {errors.guests && <p className="text-red-500 text-xs mt-1">{errors.guests.message}</p>}
+        {errors.guests && <p className="text-orange-500 text-xs mt-1">{errors.guests.message}</p>}
       </div>
       <button type="submit"
         className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-xl transition-colors">

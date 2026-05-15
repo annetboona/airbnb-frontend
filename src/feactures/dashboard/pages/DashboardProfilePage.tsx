@@ -21,8 +21,8 @@ function ToastContainer({ toasts }: { toasts: { id: number; msg: string; type: s
           key={t.id}
           className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium shadow-2xl border animate-[fadeUp_0.3s_ease]
             ${t.type === "success"
-              ? "bg-emerald-50 border-emerald-200 text-emerald-700"
-              : "bg-red-50 border-red-200 text-red-700"
+              ? "bg-emerald-50 border-emerald-200 text-gray-700"
+              : "bg-orange-50 border-orange-200 text-orange-700"
             }`}
         >
           <span className="text-xs">{t.type === "success" ? "✓" : "✕"}</span>
@@ -601,14 +601,14 @@ function AccountTab({ toast }: { toast: ReturnType<typeof useToast> }) {
       <Divider />
 
       <div className="p-4 rounded-xl bg-red-50 border border-red-200">
-        <p className="text-sm font-semibold text-red-700 mb-2">Delete account</p>
-        <p className="text-xs text-red-500 leading-relaxed mb-3.5">
+        <p className="text-sm font-semibold text-orange-700 mb-2">Delete account</p>
+        <p className="text-xs text-orange-500 leading-relaxed mb-3.5">
           Permanently delete your account and all associated data. This action cannot be undone and all your listings will be removed.
         </p>
         <button
           onClick={handleDelete}
           disabled={deleting}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold bg-red-500 hover:bg-red-600 text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
         >
           {deleting
             ? <><Spinner size={14} className="text-white" /> Deleting…</>
