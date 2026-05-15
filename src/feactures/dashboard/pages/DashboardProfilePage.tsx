@@ -256,12 +256,33 @@ function ProfileInfoTab({ toast }: { toast: ReturnType<typeof useToast> }) {
     setFormData((f) => ({ ...f, [e.target.name]: e.target.value }));
     setDirty(true);
   };
+// In DashboardProfilePage.tsx
 
-  const updateProfile = async (data: Record<string, string>) => {
+const updateProfile = async (data: Record<string, string>) => {
+  try {
     await api.patch(`/users/${profile!.id}`, data);
     await refreshProfile();
-  };
+  } catch (error: any) {
+    console.error("Update profile error:", error);
+    throw error; // Re-throw so handleSubmit can catch it
+  }
+};
 
+const handleSubmit = async () => {
+  if (!dirty) return;
+  setSaving(true);
+  try {
+    await updateProfile(formData);
+    setDirty(false);
+    toast.success("Profile updated successfully");
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.message || "Failed to update profile";
+    toast.error(errorMessage);
+    console.error("Profile update failed:", error);
+  } finally {
+    setSaving(false);
+  }
+};
   const uploadAvatar = async (file: File) => {
     const fd = new FormData();
     fd.append("avatar", file);
@@ -282,19 +303,6 @@ function ProfileInfoTab({ toast }: { toast: ReturnType<typeof useToast> }) {
     } catch {
       toast.error("Failed to remove photo");
     }
-  };
-
-  const handleSubmit = async () => {
-    if (!dirty) return;
-    setSaving(true);
-    try {
-      await updateProfile(formData);
-      setDirty(false);
-      toast.success("Profile updated successfully");
-    } catch {
-      toast.error("Failed to update profile");
-    }
-    setSaving(false);
   };
 
   if (!profile)

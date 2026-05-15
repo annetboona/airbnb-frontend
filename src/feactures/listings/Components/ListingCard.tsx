@@ -1,4 +1,4 @@
-import { Star, Navigation, Heart, MapPin, Users } from "lucide-react"
+import { Star, Navigation, Heart, Users } from "lucide-react"
 import { motion } from "framer-motion"
 import { Link } from "react-router-dom"
 import type { Listing } from "../../../store/type"
@@ -9,7 +9,8 @@ export default function ListingCard({ listing, index }: { listing: Listing; inde
   const { toggle, isSaved } = useFavorites()
   const saved = isSaved(listing.id)
 
-const coverImage = listing.photos?.[0]?.url ?? "https://placehold.co/400x260?text=No+Image"
+  const coverImage = listing.photos?.[0]?.url ?? "https://placehold.co/400x260?text=No+Image"
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -30,21 +31,16 @@ const coverImage = listing.photos?.[0]?.url ?? "https://placehold.co/400x260?tex
         <button
           onClick={() => toggle(listing.id, listing.title)}
           className={`absolute top-3 right-3 rounded-full p-1.5 transition-all duration-200 shadow ${
-            saved ? "bg-red-500 text-white scale-110" : "bg-white/80 hover:bg-white text-gray-400 hover:text-red-500"
+            saved ? "bg-orange-500 text-white scale-110" : "bg-white/80 hover:bg-white text-gray-400 hover:text-orange-500"
           }`}
           aria-label={saved ? "Remove from saved" : "Save listing"}
         >
           <Heart size={15} fill={saved ? "white" : "none"} />
         </button>
-
-        {/* Map pin FAB */}
-        <div className="absolute -bottom-5 right-4 bg-orange-500 hover:bg-orange-600 text-white rounded-full p-2.5 shadow-lg cursor-pointer transition-colors z-10">
-          <MapPin size={18} />
-        </div>
       </div>
 
       {/* Body */}
-      <div className="pt-8 px-4 pb-4">
+      <div className="pt-4 px-4 pb-4">
         {/* Type badge */}
         <span className="inline-block bg-orange-50 text-orange-500 text-[11px] font-semibold px-2 py-0.5 rounded-full mb-2 capitalize">
           {listing.type}
@@ -75,8 +71,7 @@ const coverImage = listing.photos?.[0]?.url ?? "https://placehold.co/400x260?tex
         {/* Footer row */}
         <div className="flex items-center justify-between text-sm text-gray-500 border-t border-gray-100 pt-3">
           <div className="flex items-center gap-1.5">
-            <MapPin size={13} className="text-gray-400" />
-            <span className="truncate max-w-110px">{listing.location}</span>
+            <span className="truncate max-w-[110px] text-gray-500">{listing.location}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <Users size={13} className="text-gray-400" />

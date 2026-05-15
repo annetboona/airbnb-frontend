@@ -109,7 +109,7 @@ export default function HomePage() {
     <div className="font-sans text-gray-900 overflow-x-hidden">
 
       {/* ══ HERO ════════════════════════════════════════════ */}
-      <section className="relative min-h-[580 overflow-hidden flex items-center justify-center">
+      <section className="relative min-h-580px overflow-hidden flex items-center justify-center">
         {/* Collage */}
         <div className="absolute inset-0 grid grid-cols-4 grid-rows-2 gap-0.5">
           {heroImages.map((src, i) => (
@@ -217,10 +217,10 @@ export default function HomePage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10 max-w-4xl mx-auto relative">
           {/* Dashed connector */}
-          <div className="hidden md:block absolute top-9 left-[20%] right-[20%] border-t-2 border-dashed border-red-300 opacity-40 pointer-events-none" />
+          <div className="hidden md:block absolute top-9 left-[20%] right-[20%] border-t-2 border-dashed border-orange-300 opacity-40 pointer-events-none" />
           {steps.map((s, i) => (
             <div key={i} className="text-center relative">
-              <div className={` w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl font-black mx-auto mb-6 shadow-lg ${i === 1 ? "bg-red-500 shadow-red-300" : "bg-orange-500 shadow-orange-300"}`}>
+              <div className={`w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl font-black mx-auto mb-6 shadow-lg ${i === 1 ? "bg-orange-600 shadow-orange-300" : "bg-orange-500 shadow-orange-200"}`}>
                 {s.n}
               </div>
               <h3 className="font-extrabold text-gray-900 text-base mb-3 leading-snug">{s.title}</h3>
@@ -231,14 +231,14 @@ export default function HomePage() {
       </section>
 
       {/* ══ TOP REGIONS ═════════════════════════════════════ */}
-      <section className="bg-red-500 py-20 overflow-hidden">
+      <section className="bg-gray-900 py-20 overflow-hidden">
         <div className="text-center mb-10">
-          <p className="text-white/90 text-3xl mb-2" style={{ fontFamily: "'Dancing Script','Brush Script MT',cursive" }}>
+          <p className="text-orange-400 text-3xl mb-2" style={{ fontFamily: "'Dancing Script','Brush Script MT',cursive" }}>
             Top Regions
           </p>
-          <p className="text-white/70 text-sm">
+          <p className="text-gray-400 text-sm">
             Discover exciting categories.{" "}
-            <span className="text-white font-semibold">Find what you're looking for.</span>
+            <span className="text-orange-400 font-semibold">Find what you're looking for.</span>
           </p>
         </div>
 
@@ -292,7 +292,7 @@ export default function HomePage() {
             </p>
             <button
               onClick={() => navigate("/listings")}
-              className="bg-red-500 hover:bg-red-600 active:scale-95 text-white font-bold px-7 py-3.5 rounded-lg transition-all"
+              className="bg-orange-600 hover:bg-orange-700 active:scale-95 text-white font-bold px-7 py-3.5 rounded-lg transition-all"
             >
               View All Places
             </button>
@@ -313,11 +313,11 @@ export default function HomePage() {
                     className="w-full h-full object-cover"
                   />
                   {i === 0 && (
-                    <span className="absolute top-2.5 left-2.5 bg-red-500 text-white text-[10px] font-black px-2 py-1 rounded">
+                    <span className="absolute top-2.5 left-2.5 bg-orange-500 text-white text-[10px] font-black px-2 py-1 rounded">
                       ⭐ FEATURED
                     </span>
                   )}
-                  <span className="absolute bottom-2.5 left-2.5 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded">
+                  <span className="absolute bottom-2.5 left-2.5 bg-orange-600 text-white text-[10px] font-bold px-2 py-1 rounded">
                     ${l.pricePerNight}/night
                   </span>
                 </div>
@@ -355,7 +355,7 @@ export default function HomePage() {
                 >
                   <div className="relative min-h-160px overflow-hidden">
                     <img src={p.img} alt={p.name} className="w-full h-full object-cover" />
-                    {p.badge && <span className="absolute top-2.5 left-2.5 bg-red-500 text-white text-[10px] font-black px-2 py-1 rounded">⭐ FEATURED</span>}
+                    {p.badge && <span className="absolute top-2.5 left-2.5 bg-orange-500 text-white text-[10px] font-black px-2 py-1 rounded">⭐ FEATURED</span>}
                     {!p.badge && <span className="absolute top-2.5 left-2.5 bg-green-500 text-white text-[10px] font-black px-2 py-1 rounded">10% OFF</span>}
                   </div>
                   <div className="p-4">
@@ -379,7 +379,7 @@ export default function HomePage() {
       </section>
 
       {/* ══ FIND YOUR PERFECT PLACE ══════════════════════════ */}
-      <section className="bg-red-500 py-20 px-6">
+      <section className="bg-orange-600 py-20 px-6">
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div>
             <h2 className="text-4xl lg:text-5xl font-black text-white leading-tight mb-7">
@@ -409,7 +409,7 @@ export default function HomePage() {
             </ul>
             <button
               onClick={() => navigate("/register")}
-              className="bg-white text-red-500 hover:bg-gray-50 active:scale-95 font-bold px-8 py-3.5 rounded-lg transition-all"
+              className="bg-white text-orange-600 hover:bg-orange-50 active:scale-95 font-bold px-8 py-3.5 rounded-lg transition-all"
             >
               Get Started Now
             </button>
@@ -418,7 +418,7 @@ export default function HomePage() {
       </section>
 
       {/* ══ TESTIMONIALS ════════════════════════════════════ */}
-      <section className="relative min-h-440px]py-20 px-6 text-center overflow-hidden">
+      <section className="relative min-h-440px py-20 px-6 text-center overflow-hidden">
         <img src={imgConvention} alt="" className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 bg-black/68" style={{ background: "rgba(0,0,0,.68)" }} />
         <div className="relative z-10 max-w-3xl mx-auto">
@@ -485,7 +485,7 @@ export default function HomePage() {
                 placeholder="name@example.com"
                 className="flex-1 bg-transparent border-none outline-none px-5 py-3 text-white text-sm placeholder-white/40"
               />
-              <button className="w-11 h-11 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center m-1 shrink-0 transition-colors">
+              <button className="w-11 h-11 rounded-full bg-orange-500 hover:bg-orange-600 flex items-center justify-center m-1 shrink-0 transition-colors">
                 <ArrowRight size={15} className="text-white" />
               </button>
             </div>
@@ -503,7 +503,7 @@ export default function HomePage() {
         {/* Bottom bar */}
         <div className="max-w-6xl mx-auto border-t border-white/10 py-5 flex flex-wrap items-center justify-between gap-3">
           <span className="text-2xl font-black">
-            AIR<span className="text-red-400 italic" style={{ fontFamily: "Georgia,serif" }}>BNB.</span>
+            AIR<span className="text-orange-400 italic" style={{ fontFamily: "Georgia,serif" }}>BNB.</span>
           </span>
           <span className="text-white/40 text-sm">© 2026 AIRBNB — All Rights Reserved</span>
           <div className="flex gap-5 text-sm text-white/50">
