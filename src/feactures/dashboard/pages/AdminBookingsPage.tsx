@@ -11,10 +11,8 @@ export default function AdminBookingsPage() {
       const { data } = await api.get<PaginatedBookings>("/bookings", {
         params: { limit: 100, page: 1 },
       })
-      const rows =
-        (data as Record<string, unknown>).data ??
-        (data as Record<string, unknown>).bookings ??
-        []
+     const raw = data as unknown as Record<string, unknown>
+     const rows = raw.data ?? raw.bookings ?? []
       return rows as PaginatedBookings["data"]
     },
   })
