@@ -3,7 +3,7 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   plugins: [tailwindcss()],
-  base: process.env.VITE_BASE_PATH || "/react-vite-deployment",
+  base: process.env.VITE_BASE_PATH || "/airbnb-frontend",
   server: {
     proxy: {
       // Any request to /api/v1/* is forwarded to the deployed Render backend
