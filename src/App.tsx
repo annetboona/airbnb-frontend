@@ -65,6 +65,7 @@ function App() {
           <Route path="/listings/:id" element={<ListingDetail />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/assistant" element={<GuestAiAssistantPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
 
