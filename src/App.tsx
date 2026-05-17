@@ -28,6 +28,7 @@ import AdminListingsPage from "./feactures/dashboard/pages/AdminListingsPage"
 import AdminBookingsPage from "./feactures/dashboard/pages/AdminBookingsPage"
 import AdminHostRequestsPage from "./feactures/dashboard/pages/Adminhostrequestspage"
 import { useAuth } from "./feactures/auth/hooks/useAuth"
+import ChatWidget from "./shared/Components/ChatWidget"
 
 
 const HomePage = lazy(() => import("./feactures/listings/pages/HomePage"))
@@ -209,6 +210,7 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
+      <ChatWidget />
     </>
   )
 }
