@@ -12,7 +12,7 @@ export default function GuestAiAssistantPage() {
   if (!sessionRef.current) {
     const sid =
       typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`
-    sessionRef.current = `user-${user?.id ?? user?.userId ?? "anon"}-session-${sid}`
+    sessionRef.current = `user-${(user as any)?.id ?? user?.userId ?? "anon"}-session-${sid}`
   }
   const sessionId = sessionRef.current
 
