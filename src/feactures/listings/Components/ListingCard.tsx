@@ -1,6 +1,6 @@
 import { Star, Navigation, Heart, Users } from "lucide-react"
 import { motion } from "framer-motion"
-import { Link } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import type { Listing } from "../../../store/type"
 import { useFavorites } from "../hooks/useFavorites"
 import styles from "./ListingCard.module.css"
@@ -8,6 +8,7 @@ import styles from "./ListingCard.module.css"
 export default function ListingCard({ listing, index }: { listing: Listing; index: number }) {
   const { toggle, isSaved } = useFavorites()
   const saved = isSaved(listing.id)
+  const navigate = useNavigate()
 
   const coverImage = listing.photos?.[0]?.url ?? "https://placehold.co/400x260?text=No+Image"
 
@@ -17,6 +18,7 @@ export default function ListingCard({ listing, index }: { listing: Listing; inde
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, delay: index * 0.07 }}
       className={styles.card}
+      onClick={() => navigate(`/listings/${listing.id}`)}
     >
       {/* Image */}
       <div className="relative overflow-hidden">
@@ -29,7 +31,10 @@ export default function ListingCard({ listing, index }: { listing: Listing; inde
 
         {/* Save button */}
         <button
-          onClick={() => toggle(listing.id, listing.title)}
+          onClick={(e) => {
+            e.stopPropagation()
+            toggle(listing.id, listing.title)
+          }}
           className={`absolute top-3 right-3 rounded-full p-1.5 transition-all duration-200 shadow ${
             saved ? "bg-orange-500 text-white scale-110" : "bg-white/80 hover:bg-white text-gray-400 hover:text-orange-500"
           }`}
@@ -61,11 +66,9 @@ export default function ListingCard({ listing, index }: { listing: Listing; inde
 
         {/* Title */}
         <div className="flex items-center gap-1.5 mb-3">
-          <Link to={`/listings/${listing.id}`}>
-            <h3 className="text-gray-900 font-semibold text-base leading-tight hover:text-orange-500 transition-colors">
-              {listing.title}
-            </h3>
-          </Link>
+          <h3 className="text-gray-900 font-semibold text-base leading-tight hover:text-orange-500 transition-colors">
+            {listing.title}
+          </h3>
         </div>
 
         {/* Footer row */}
@@ -77,7 +80,13 @@ export default function ListingCard({ listing, index }: { listing: Listing; inde
             <Users size={13} className="text-gray-400" />
             <span>{listing.guests} guests</span>
           </div>
-          <button className="flex items-center gap-1 text-gray-500 hover:text-orange-500 transition-colors">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(listing.location)}`, "_blank")
+            }}
+            className="flex items-center gap-1 text-gray-500 hover:text-orange-500 transition-colors"
+          >
             <Navigation size={13} />
             <span>Directions</span>
           </button>
