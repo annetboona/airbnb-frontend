@@ -230,7 +230,7 @@ export default function AdminHostRequestsPage() {
                 type="button"
                 disabled={rejectMut.isPending}
                 onClick={() => rejectMut.mutate({ id: rejectModal.id, adminNote })}
-                className="px-4 py-2 rounded-xl text-sm bg-gray-800 text-white hover:bg-gray-900 disabled:opacity-50 font-semibold"
+                className="px-4 py-2 rounded-xl text-sm bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-50 font-semibold"
               >
                 {rejectMut.isPending ? "Rejecting…" : "Reject"}
               </button>
