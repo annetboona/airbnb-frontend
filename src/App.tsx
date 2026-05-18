@@ -22,6 +22,7 @@ import HostListingFormPage from "./feactures/dashboard/pages/HostListingFormPage
 import HostPhotosPage from "./feactures/dashboard/pages/HostPhotosPage"
 import HostBookingRequestsPage from "./feactures/dashboard/pages/HostBookingRequestsPage"
 import HostAiDescriptionPage from "./feactures/dashboard/pages/HostAiDescriptionPage"
+import HostReviewsPage from "./feactures/dashboard/pages/HostReviewsPage"
 import AdminStatsPage from "./feactures/dashboard/pages/AdminStatsPage"
 import AdminUsersPage from "./feactures/dashboard/pages/AdminUsersPage"
 import AdminListingsPage from "./feactures/dashboard/pages/AdminListingsPage"
@@ -101,7 +102,9 @@ function App() {
             <Route
               path="assistant"
               element={
-                <ProtectedRoute roles={["GUEST"]}>
+                // No role restriction — all authenticated users (GUEST, HOST, ADMIN)
+                // can chat with the AI assistant
+                <ProtectedRoute>
                   <GuestAiAssistantPage />
                 </ProtectedRoute>
               }
@@ -161,6 +164,14 @@ function App() {
               element={
                 <ProtectedRoute roles={["HOST"]}>
                   <HostAiDescriptionPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="reviews"
+              element={
+                <ProtectedRoute roles={["HOST"]}>
+                  <HostReviewsPage />
                 </ProtectedRoute>
               }
             />
