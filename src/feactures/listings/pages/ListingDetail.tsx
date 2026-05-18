@@ -351,6 +351,34 @@ export default function ListingDetail() {
             </div>
           )}
 
+          {/* Map Section */}
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Location on Map</p>
+            <div className="relative rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
+              <iframe
+                width="100%"
+                height="300"
+                src={`https://maps.google.com/maps?q=${encodeURIComponent(listing.location)}&t=&z=13&ie=UTF8&iwloc=&output=embed`}
+                frameBorder="0"
+                scrolling="no"
+                marginHeight="0"
+                marginWidth="0"
+                className="rounded-2xl"
+              ></iframe>
+              <div className="absolute bottom-4 right-4">
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(listing.location)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-white hover:bg-gray-50 text-gray-800 text-xs font-semibold px-4 py-2 rounded-xl shadow-md flex items-center gap-1.5 transition-colors"
+                >
+                  <MapPin size={14} className="text-orange-500" />
+                  View on Google Maps
+                </a>
+              </div>
+            </div>
+          </div>
+
           {/* Price + Book */}
           <div className="mt-5 pt-4 border-t border-gray-100 flex items-end justify-between gap-4 flex-wrap">
             <div>

@@ -12,7 +12,7 @@ import {
   WashingMachine, Tv2, PawPrint, Flame, Monitor, Coffee,
   Armchair, Sunset, Thermometer,
   ImagePlus, Trash2, ArrowLeft, ArrowRight, Check,
-  MapPin, Users, DollarSign, Star, ChevronRight,
+  MapPin, Users, DollarSign, Star, ChevronRight, Sparkles,
 } from "lucide-react"
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -73,6 +73,35 @@ export default function HostListingFormPage() {
   // ── UI state ──
   const [activeStep, setActiveStep] = useState(1)
   const [saving, setSaving]         = useState(false)
+  const [generatingAI, setGeneratingAI] = useState(false)
+
+  const generateAIDescription = async () => {
+    if (!title || !location || !type) {
+      toast.error("Please fill in Title, Location, and Property Type first.")
+      return
+    }
+    setGeneratingAI(true)
+    try {
+      const amenities = Array.from(selectedAmenities)
+        .map((aid) => AMENITY_OPTIONS.find((o) => o.id === aid)?.label)
+        .filter(Boolean)
+
+      const { data } = await api.post("/ai/description", {
+        title,
+        location,
+        type,
+        guests,
+        amenities,
+        pricePerNight
+      })
+      setDescription(data.description)
+      toast.success("Description generated!")
+    } catch (error) {
+      toast.error("Failed to generate description")
+    } finally {
+      setGeneratingAI(false)
+    }
+  }
 
   // Slots available for new photos
   const uploadedCount = existing?.photos?.length ?? 0
@@ -268,7 +297,22 @@ export default function HostListingFormPage() {
 
               {/* Description */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Description</label>
+                <div className="flex justify-between items-center mb-1.5">
+                  <label className="block text-sm font-semibold text-gray-700">Description</label>
+                  <button
+                    type="button"
+                    onClick={generateAIDescription}
+                    disabled={generatingAI}
+                    className="text-xs text-orange-500 hover:text-orange-600 flex items-center gap-1 font-medium disabled:opacity-50"
+                  >
+                    {generatingAI ? (
+                      <span className="w-3 h-3 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Sparkles size={14} />
+                    )}
+                    Generate with AI
+                  </button>
+                </div>
                 <textarea required minLength={10} rows={4} value={description} onChange={(e) => setDescription(e.target.value)}
                   placeholder="Describe your space — what makes it special?"
                   className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-transparent transition resize-none" />

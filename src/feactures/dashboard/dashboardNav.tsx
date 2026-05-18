@@ -54,7 +54,6 @@ export function getDashboardNav(role: AuthRole): SidebarGroup[] {
           { label: "My listings",      to: "/dashboard/my-listings",    Icon: List            },
           { label: "Create listing",   to: "/dashboard/listings/new",   Icon: PlusCircle      },
           { label: "Booking requests", to: "/dashboard/requests",       Icon: CalendarCheck   },
-          { label: "AI description",   to: "/dashboard/ai-description", Icon: Sparkles        },
           { label: "Reviews",          to: "/dashboard/reviews",        Icon: MessageSquare   },
         ],
       },
