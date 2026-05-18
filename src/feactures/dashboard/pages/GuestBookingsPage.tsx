@@ -12,12 +12,15 @@ export default function GuestBookingsPage() {
   const qc = useQueryClient()
 
   const [pendingCancel, setPendingCancel] = useState<Booking | null>(null)
+  const [page, setPage] = useState(1)
 
   const q = useQuery({
-    queryKey: ["guest-bookings", user?.userId],
+    queryKey: ["guest-bookings", user?.userId, page],
     queryFn: async () => {
-      const { data } = await api.get<PaginatedBookings>(`/bookings/user/${user!.userId}`)
-      return data.data ?? []
+      const { data } = await api.get<any>(`/bookings/user/${user!.userId}`, {
+        params: { limit: 10, page },
+      })
+      return data
     },
     enabled: !!user?.userId,
   })
@@ -41,16 +44,41 @@ export default function GuestBookingsPage() {
 
       <BookingsPanel
         mode="guest"
-        bookings={q.data ?? []}
+        bookings={q.data?.data ?? []}
         isLoading={q.isLoading}
         isError={q.isError}
         refetch={() => q.refetch()}
         // ✅ Instead of cancelling immediately, open the modal
         onGuestCancel={async (id) => {
-          const booking = (q.data ?? []).find((b) => b.id === id) ?? null
+          const booking = (q.data?.data ?? []).find((b) => b.id === id) ?? null
           setPendingCancel(booking ?? ({ id } as Booking))
         }}
       />
+
+      {/* Pagination */}
+      {q.data?.meta && q.data.meta.totalPages > 1 && (
+        <div className="flex justify-between items-center mt-4">
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className="px-3 py-1.5 border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50 disabled:opacity-50 transition"
+          >
+            Previous
+          </button>
+          <span className="text-xs text-gray-500 font-medium">
+            Page {page} of {q.data.meta.totalPages}
+          </span>
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.min(q.data.meta.totalPages, p + 1))}
+            disabled={page === q.data.meta.totalPages}
+            className="px-3 py-1.5 border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50 disabled:opacity-50 transition"
+          >
+            Next
+          </button>
+        </div>
+      )}
 
       {/* ✅ Cancel modal — only shown when a booking is selected */}
       <CancelBookingModal
