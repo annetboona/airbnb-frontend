@@ -235,8 +235,8 @@ export default function AdminStatsPage() {
                   <stop offset="95%" stopColor="#f97316" stopOpacity={0.01}/>
                 </linearGradient>
                 <linearGradient id="colorBookings" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.25}/>
-                  <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.01}/>
+                  <stop offset="5%" stopColor="#9ca3af" stopOpacity={0.25}/>
+                  <stop offset="95%" stopColor="#9ca3af" stopOpacity={0.01}/>
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
@@ -245,7 +245,7 @@ export default function AdminStatsPage() {
               <Tooltip contentStyle={{ borderRadius: 12, fontSize: 12, border: "none", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }} />
               <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11, paddingTop: 10 }} />
               <Area type="monotone" dataKey="Listings" stroke="#f97316" strokeWidth={2} fillOpacity={1} fill="url(#colorListings)" />
-              <Area type="monotone" dataKey="Bookings" stroke="#8b5cf6" strokeWidth={2} fillOpacity={1} fill="url(#colorBookings)" />
+              <Area type="monotone" dataKey="Bookings" stroke="#9ca3af" strokeWidth={2} fillOpacity={1} fill="url(#colorBookings)" />
             </AreaChart>
           </ResponsiveContainer>
         </div>
