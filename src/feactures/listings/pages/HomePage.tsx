@@ -30,10 +30,7 @@ const categories = [
   { icon: <Dumbbell size={26} />,        name: "Gymnasiums", key: "GYM"        },
 ]
 
-const heroImages = [
-  imgConvention, imgHotel, imgNightHotel, imgKps,
-  imgRestaurant, imgPool, imgApartment, imgConvention,
-]
+
 
 const steps = [
   { n: 1, title: "Input your location to start looking for landmarks.", desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pharetra vitae quam integer semper." },
@@ -109,13 +106,7 @@ export default function HomePage() {
     <div className="font-sans text-gray-900 overflow-x-hidden">
 
       {/* ══ HERO ════════════════════════════════════════════ */}
-      <section className="relative min-h-580px overflow-hidden flex items-center justify-center">
-        {/* Collage */}
-        <div className="absolute inset-0 grid grid-cols-4 grid-rows-2 gap-0.5">
-          {heroImages.map((src, i) => (
-            <div key={i} className="bg-cover bg-center" style={{ backgroundImage: `url(${src})` }} />
-          ))}
-        </div>
+      <section className="relative min-h-[580px] bg-cover bg-center overflow-hidden flex items-center justify-center" style={{ backgroundImage: `url(${imgConvention})` }}>
         <div className="absolute inset-0 bg-black/60" />
 
         <div className="relative z-10 text-center px-6 py-20">
