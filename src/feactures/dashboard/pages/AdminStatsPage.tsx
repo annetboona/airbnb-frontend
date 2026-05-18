@@ -20,7 +20,7 @@ interface UsersStats {
   byRole?: { role: string; _count: { role: number } }[]
 }
 
-const COLORS = ["#f97316", "#3b82f6", "#10b981", "#8b5cf6", "#ec4899", "#f59e0b"]
+const COLORS = ["#f97316", "#9ca3af", "#4b5563"]
 
 const StatCard = ({
   label,
@@ -323,7 +323,7 @@ export default function AdminStatsPage() {
                 <PieChart>
                   <Pie data={roleData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} innerRadius={35} paddingAngle={3}
                     label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}>
-                    {roleData.map((_, i) => <Cell key={i} fill={COLORS[(i + 1) % COLORS.length]} />)}
+                    {roleData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                   </Pie>
                   <Tooltip contentStyle={{ borderRadius: 12, fontSize: 12, border: "none", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }} />
                 </PieChart>
@@ -339,13 +339,13 @@ export default function AdminStatsPage() {
                   <div key={i} className="text-xs">
                     <div className="flex justify-between items-center font-medium text-gray-700 mb-1">
                       <span className="capitalize flex items-center gap-1.5">
-                        <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: COLORS[(i + 1) % COLORS.length] }} />
+                        <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
                         {r.name.toLowerCase()}
                       </span>
                       <span>{r.value} ({percentage.toFixed(0)}%)</span>
                     </div>
                     <div className="w-full bg-white h-1.5 rounded-full overflow-hidden border border-gray-200">
-                      <div className="h-full rounded-full transition-all duration-500" style={{ width: `${percentage}%`, backgroundColor: COLORS[(i + 1) % COLORS.length] }} />
+                      <div className="h-full rounded-full transition-all duration-500" style={{ width: `${percentage}%`, backgroundColor: COLORS[i % COLORS.length] }} />
                     </div>
                   </div>
                 )
