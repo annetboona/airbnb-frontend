@@ -13,7 +13,7 @@ export default function LoginPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-gray-900">
-            List<span className="text-orange-500 italic">On.</span>
+            AIR<span className="text-orange-500 italic">BNB.</span>
           </h1>
           <p className="text-gray-500 text-sm mt-2">Sign in to your account</p>
         </div>
