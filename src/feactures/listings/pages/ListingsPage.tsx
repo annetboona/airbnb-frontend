@@ -70,41 +70,48 @@ export default function ListingsPage() {
     return Array.from(locMap.values())
   }, [state.listings])
 
-  // Dynamically calculate high-contrast evenly distributed coordinate points on the map for each location city in the system
-  const locationCoords = useMemo(() => {
-    const coords: Record<string, { x: number; y: number }> = {}
-    uniqueLocations.forEach((loc, idx) => {
-      const key = loc.name.toLowerCase()
-      // Generate clean, high-contrast, evenly spaced coordinate points spread across the map area (from 15% to 85%)
-      const angle = (idx * 2 * Math.PI) / Math.max(1, uniqueLocations.length)
-      const radius = 22 + (idx % 3) * 11 // Dynamic spacing rings: 22%, 33%, 44%
-      coords[key] = {
-        x: Math.round(50 + Math.cos(angle) * radius),
-        y: Math.round(50 + Math.sin(angle) * radius),
-      }
-    })
-    return coords
-  }, [uniqueLocations])
+  const filtered = useMemo(() => {
+    return state.listings.filter((l) => {
+      const q   = state.filter.toLowerCase()
+      const loc = urlLocation.toLowerCase()
+      const cat = urlCategory.toLowerCase()
 
-  // Coordinate mapper for dynamic pins
-  const getCoordinates = (listing: Listing) => {
-    const locKey = listing.location.split(",")[0]?.trim().toLowerCase() ?? ""
-    if (locationCoords[locKey]) {
-      const hash = listing.id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)
-      const jitterX = (hash % 10) - 5 // Subtle jitter: -5% to +5% spread so pins in the same city don't completely overlap
-      const jitterY = ((hash >> 2) % 10) - 5
-      return {
-        x: Math.max(12, Math.min(88, locationCoords[locKey].x + jitterX)),
-        y: Math.max(12, Math.min(88, locationCoords[locKey].y + jitterY)),
-      }
+      const matchesQuery    = !q   || l.title.toLowerCase().includes(q) || l.type.toLowerCase().includes(q) || l.location.toLowerCase().includes(q)
+      const matchesLocation = !loc || l.location.toLowerCase().includes(loc)
+      const matchesCategory = !cat || l.type.toLowerCase() === cat.toLowerCase()
+      const matchesSaved    = savedOnly ? state.saved.has(l.id) : true
+
+      return matchesQuery && matchesLocation && matchesCategory && matchesSaved
+    })
+  }, [state.listings, state.filter, state.saved, savedOnly, urlLocation, urlCategory])
+
+  // Find currently active listing being hovered or selected
+  const activeListing = useMemo(() => {
+    if (selectedPin) return selectedPin
+    if (hoveredListingId) {
+      return filtered.find((l) => l.id === hoveredListingId) || null
     }
-    // Fallback hash mapping
-    const hash = listing.id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)
-    return {
-      x: 20 + (hash % 60),
-      y: 20 + ((hash >> 2) % 60),
+    return null
+  }, [selectedPin, hoveredListingId, filtered])
+
+  // Dynamically generate the Google Map Embed URL
+  const googleMapUrl = useMemo(() => {
+    let query = "Kigali, Rwanda"
+    let zoom = 12
+
+    if (activeListing) {
+      query = activeListing.location
+      zoom = 15 // Zoom in closer for specific listings
+    } else if (urlLocation) {
+      query = urlLocation
+      zoom = 13 // Moderate zoom for cities
+    } else if (filtered.length > 0) {
+      query = filtered[0].location
+      zoom = 12
     }
-  }
+
+    return `https://maps.google.com/maps?q=${encodeURIComponent(query)}&t=&z=${zoom}&ie=UTF8&iwloc=&output=embed`
+  }, [activeListing, urlLocation, filtered])
 
   // Sync URL ?q param → store filter on mount / URL change
   useEffect(() => {
@@ -131,20 +138,7 @@ export default function ListingsPage() {
     refetch()
   }
 
-  const filtered = useMemo(() => {
-    return state.listings.filter((l) => {
-      const q   = state.filter.toLowerCase()
-      const loc = urlLocation.toLowerCase()
-      const cat = urlCategory.toLowerCase()
 
-      const matchesQuery    = !q   || l.title.toLowerCase().includes(q) || l.type.toLowerCase().includes(q) || l.location.toLowerCase().includes(q)
-      const matchesLocation = !loc || l.location.toLowerCase().includes(loc)
-      const matchesCategory = !cat || l.type.toLowerCase() === cat.toLowerCase()
-      const matchesSaved    = savedOnly ? state.saved.has(l.id) : true
-
-      return matchesQuery && matchesLocation && matchesCategory && matchesSaved
-    })
-  }, [state.listings, state.filter, state.saved, savedOnly, urlLocation, urlCategory])
 
   const clearAll = () => {
     dispatch({ type: "SET_FILTER", payload: "" })
@@ -324,93 +318,54 @@ export default function ListingsPage() {
             )}
           </div>
 
-          {/* Map Sticky Panel */}
+          {/* Google Maps Sticky Panel */}
           {showMap && (
-            <div className="w-full lg:w-[450px] xl:w-[480px] shrink-0 lg:sticky lg:top-24 h-[550px] rounded-3xl bg-[#faf8f5] overflow-hidden shadow-xl relative border border-orange-100 animate-fade-in flex flex-col justify-between">
+            <div className="w-full lg:w-[450px] xl:w-[480px] shrink-0 lg:sticky lg:top-24 h-[550px] rounded-3xl bg-white overflow-hidden shadow-xl relative border border-gray-250 animate-fade-in flex flex-col justify-between">
               
               {/* Map Title Tag */}
-              <div className="absolute top-4 left-4 z-10 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full border border-orange-100 flex items-center gap-1.5 shadow-md">
+              <div className="absolute top-4 left-4 z-10 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full border border-gray-200 flex items-center gap-1.5 shadow-md">
                 <span className="w-2 h-2 rounded-full bg-orange-500 animate-ping" />
-                <span className="text-[10px] text-orange-600 font-black uppercase tracking-wider">Live Regional Explorer</span>
+                <span className="text-[10px] text-orange-600 font-black uppercase tracking-wider">Google Maps Live Explorer</span>
               </div>
 
-              {/* Blueprint Grid Background */}
-              <div className="absolute inset-0 select-none opacity-60">
-                <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-                  <defs>
-                    <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
-                      <path d="M 30 0 L 0 0 0 30" fill="none" stroke="rgba(249, 115, 22, 0.12)" strokeWidth="1" />
-                    </pattern>
-                  </defs>
-                  <rect width="100%" height="100%" fill="url(#grid)" />
-                  <circle cx="50%" cy="50%" r="60" fill="none" stroke="rgba(249,115,22,0.15)" strokeWidth="1" strokeDasharray="3 3" />
-                  <circle cx="50%" cy="50%" r="140" fill="none" stroke="rgba(249,115,22,0.08)" strokeWidth="1" />
-                  <circle cx="50%" cy="50%" r="220" fill="none" stroke="rgba(249,115,22,0.04)" strokeWidth="1.5" strokeDasharray="6 6" />
-                </svg>
-              </div>
-
-              {/* Clickable Dynamic Cities/Locations in the entire database */}
-              {uniqueLocations.map((loc) => {
-                const coords = locationCoords[loc.name.toLowerCase()]
-                if (!coords) return null
-                const isCurrent = urlLocation.toLowerCase() === loc.name.toLowerCase()
-                return (
-                  <button
-                    key={loc.name}
-                    onClick={() => handleRegionClick(loc.name)}
-                    className={`absolute text-[10px] font-black tracking-wide transition-all px-2.5 py-1.5 rounded-xl border backdrop-blur-md z-10 -translate-x-1/2 -translate-y-1/2 flex items-center gap-1.5 shadow-md active:scale-95
-                      ${
-                        isCurrent
-                          ? "bg-orange-500 text-white border-orange-400 shadow-orange-500/20 scale-105"
-                          : "bg-white text-gray-800 border-gray-200 hover:border-orange-500 hover:bg-orange-50"
-                      }`}
-                    style={{ left: `${coords.x}%`, top: `${coords.y}%` }}
-                  >
-                    <MapPin size={9} className="shrink-0 text-orange-500" />
-                    {loc.name}
-                  </button>
-                )
-              })}
-
-              {/* Listing Marker Pins */}
-              {filtered.map((l) => {
-                const coords = getCoordinates(l)
-                const isHovered = hoveredListingId === l.id || selectedPin?.id === l.id
-                return (
-                  <button
-                    key={l.id}
-                    onClick={() => setSelectedPin(l)}
-                    onMouseEnter={() => setHoveredListingId(l.id)}
-                    onMouseLeave={() => setHoveredListingId(null)}
-                    className={`absolute -translate-x-1/2 -translate-y-1/2 z-20 group transition-all duration-300
-                      ${isHovered ? "scale-110 z-30" : "scale-100"}`}
-                    style={{ left: `${coords.x}%`, top: `${coords.y}%` }}
-                  >
-                    <div
-                      className={`px-2.5 py-1 rounded-full text-[10px] font-black shadow-lg transition-all flex items-center justify-center gap-1 border
-                      ${
-                        isHovered
-                          ? "bg-orange-600 text-white border-orange-550 scale-105 shadow-orange-500/30"
-                          : "bg-orange-500 text-white border-orange-400 hover:bg-orange-600"
-                      }`}
+              {/* Dynamic Locations Quick Chips */}
+              <div className="absolute top-4 right-4 z-10 flex flex-wrap gap-1 max-w-[220px] justify-end">
+                {uniqueLocations.slice(0, 3).map((loc) => {
+                  const isCurrent = urlLocation.toLowerCase() === loc.name.toLowerCase()
+                  return (
+                    <button
+                      key={loc.name}
+                      onClick={() => handleRegionClick(loc.name)}
+                      className={`text-[9px] font-black px-2.5 py-1 rounded-lg border backdrop-blur-md shadow-sm transition-all active:scale-95
+                        ${isCurrent 
+                          ? "bg-orange-500 text-white border-orange-400" 
+                          : "bg-white/95 text-gray-700 border-gray-200 hover:bg-orange-50 hover:text-orange-600"}`}
                     >
-                      <span className="w-1 h-1 rounded-full bg-white animate-pulse" />
-                      ${l.pricePerNight}
-                    </div>
-                    {isHovered && (
-                      <div className="absolute inset-0 rounded-full border border-orange-500 animate-ping opacity-60 scale-125" />
-                    )}
-                  </button>
-                )
-              })}
+                      {loc.name}
+                    </button>
+                  )
+                })}
+              </div>
 
-              {/* Marker Popup Card */}
-              {selectedPin && (
+              {/* Google Maps Iframe */}
+              <iframe
+                title="Google Maps"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                loading="lazy"
+                allowFullScreen
+                src={googleMapUrl}
+                className="w-full h-full"
+              />
+
+              {/* Selected/Hovered Property Preview Card Overlay */}
+              {activeListing && (
                 <div className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-md rounded-2xl p-3 border border-orange-100 z-40 shadow-2xl flex gap-3 animate-fade-in">
-                  {selectedPin.photos?.[0]?.url ? (
+                  {activeListing.photos?.[0]?.url ? (
                     <img
-                      src={selectedPin.photos[0].url}
-                      alt={selectedPin.title}
+                      src={activeListing.photos[0].url}
+                      alt={activeListing.title}
                       className="w-16 h-16 rounded-xl object-cover shrink-0 border border-gray-100"
                     />
                   ) : (
@@ -421,23 +376,26 @@ export default function ListingsPage() {
                   <div className="flex-1 min-w-0 flex flex-col justify-between">
                     <div>
                       <div className="flex items-center justify-between gap-2">
-                        <h4 className="text-xs font-black text-gray-900 truncate">{selectedPin.title}</h4>
+                        <h4 className="text-xs font-black text-gray-900 truncate">{activeListing.title}</h4>
                         <button
-                          onClick={() => setSelectedPin(null)}
+                          onClick={() => {
+                            setSelectedPin(null)
+                            setHoveredListingId(null)
+                          }}
                           className="text-gray-400 hover:text-gray-600 p-0.5 rounded-full hover:bg-gray-150"
                         >
                           <X size={12} />
                         </button>
                       </div>
-                      <p className="text-[10px] text-gray-500 line-clamp-1 mt-0.5">{selectedPin.description}</p>
+                      <p className="text-[10px] text-gray-500 line-clamp-1 mt-0.5">{activeListing.description}</p>
                     </div>
                     <div className="flex items-center justify-between mt-1">
-                      <span className="text-xs font-black text-orange-650">
-                        ${selectedPin.pricePerNight}
+                      <span className="text-xs font-black text-orange-655">
+                        ${activeListing.pricePerNight}
                         <span className="text-[10px] text-gray-400 font-normal">/night</span>
                       </span>
                       <button
-                        onClick={() => navigate(`/listings/${selectedPin.id}`)}
+                        onClick={() => navigate(`/listings/${activeListing.id}`)}
                         className="bg-orange-500 hover:bg-orange-600 active:scale-95 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all"
                       >
                         View Details
