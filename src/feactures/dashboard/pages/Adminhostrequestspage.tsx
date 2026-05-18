@@ -34,9 +34,9 @@ const TABS: { label: string; value: Status | "ALL" }[] = [
 ]
 
 const STATUS_BADGE: Record<Status, string> = {
-  PENDING: "bg-amber-100 text-amber-700",
-  APPROVED: "bg-emerald-100 text-emerald-700",
-  REJECTED: "bg-red-100 text-red-600",
+  PENDING: "bg-orange-50 text-orange-600 border border-orange-100",
+  APPROVED: "bg-orange-500 text-white font-bold",
+  REJECTED: "bg-gray-200 text-gray-600 font-semibold",
 }
 
 export default function AdminHostRequestsPage() {
@@ -167,9 +167,9 @@ export default function AdminHostRequestsPage() {
 
               {/* Admin note (if rejected) */}
               {r.adminNote && (
-                <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3">
-                  <p className="text-xs font-semibold text-red-500 mb-1">Admin note</p>
-                  <p className="text-sm text-red-700">{r.adminNote}</p>
+                <div className="rounded-xl bg-gray-50 border border-gray-200 px-4 py-3">
+                  <p className="text-xs font-semibold text-gray-500 mb-1">Admin note</p>
+                  <p className="text-sm text-gray-600">{r.adminNote}</p>
                 </div>
               )}
 
@@ -184,14 +184,14 @@ export default function AdminHostRequestsPage() {
                     type="button"
                     disabled={approveMut.isPending}
                     onClick={() => approveMut.mutate(r.id)}
-                    className="flex-1 py-2 rounded-xl bg-emerald-500 text-white text-sm font-bold hover:bg-emerald-600 transition disabled:opacity-50"
+                    className="flex-1 py-2 rounded-xl bg-orange-500 text-white text-sm font-bold hover:bg-orange-600 transition disabled:opacity-50 shadow-sm"
                   >
                     {approveMut.isPending ? "Approving…" : "✓ Approve"}
                   </button>
                   <button
                     type="button"
                     onClick={() => { setRejectModal(r); setAdminNote("") }}
-                    className="flex-1 py-2 rounded-xl bg-red-100 text-red-600 text-sm font-bold hover:bg-red-200 transition"
+                    className="flex-1 py-2 rounded-xl bg-gray-200 text-gray-700 text-sm font-bold hover:bg-gray-300 transition shadow-sm"
                   >
                     ✕ Reject
                   </button>
@@ -204,8 +204,8 @@ export default function AdminHostRequestsPage() {
 
       {/* Reject modal */}
       {rejectModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm space-y-4 border border-gray-100">
             <h3 className="text-base font-bold text-gray-900">Reject Request</h3>
             <p className="text-sm text-gray-500">
               Rejecting <span className="font-semibold text-gray-800">{rejectModal.user.name}</span>'s request.
@@ -216,13 +216,13 @@ export default function AdminHostRequestsPage() {
               onChange={(e) => setAdminNote(e.target.value)}
               rows={3}
               placeholder="e.g. Incomplete information provided…"
-              className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-300 resize-none"
+              className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-300 resize-none"
             />
             <div className="flex gap-3 justify-end">
               <button
                 type="button"
                 onClick={() => setRejectModal(null)}
-                className="px-4 py-2 rounded-xl text-sm border border-gray-200 text-gray-600 hover:bg-gray-50"
+                className="px-4 py-2 rounded-xl text-sm border border-gray-200 text-gray-600 hover:bg-gray-50 font-semibold"
               >
                 Cancel
               </button>
@@ -230,7 +230,7 @@ export default function AdminHostRequestsPage() {
                 type="button"
                 disabled={rejectMut.isPending}
                 onClick={() => rejectMut.mutate({ id: rejectModal.id, adminNote })}
-                className="px-4 py-2 rounded-xl text-sm bg-red-500 text-white hover:bg-red-600 disabled:opacity-50"
+                className="px-4 py-2 rounded-xl text-sm bg-gray-800 text-white hover:bg-gray-900 disabled:opacity-50 font-semibold"
               >
                 {rejectMut.isPending ? "Rejecting…" : "Reject"}
               </button>
