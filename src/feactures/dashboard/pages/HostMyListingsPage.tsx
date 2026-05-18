@@ -1,7 +1,6 @@
 import { useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import api from "../../../lib/axios"
-import type { Listing, PaginatedListings } from "../../../store/type"
 import { HostListingsManagePanel } from "../dashboardPanels"
 import toast from "react-hot-toast"
 
