@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import api from "../../../lib/axios"
-import type { Booking, PaginatedBookings } from "../../../store/type"
+import type { Booking } from "../../../store/type"
 import { BookingsPanel } from "../dashboardPanels"
 import CancelBookingModal from "../../bookings/Components/Cancelbookingmoda"
 import toast from "react-hot-toast"

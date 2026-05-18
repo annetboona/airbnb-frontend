@@ -4,12 +4,6 @@ import api from "../../../lib/axios"
 import type { Listing, PaginatedListings } from "../../../store/type"
 import { HostListingsManagePanel } from "../dashboardPanels"
 import toast from "react-hot-toast"
-import type { AxiosResponse } from "axios"
-
-function normalize(res: AxiosResponse<PaginatedListings & Record<string, unknown>>) {
-  const body = res.data as Record<string, unknown>
-  return (body.data as Listing[]) ?? []
-}
 
 export default function HostMyListingsPage() {
   const qc = useQueryClient()
