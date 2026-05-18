@@ -1,7 +1,6 @@
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import api from "../../../lib/axios"
-import type { PaginatedBookings } from "../../../store/type"
 import { BookingsPanel } from "../dashboardPanels"
 import { AlertCircle, Lock } from "lucide-react"
 

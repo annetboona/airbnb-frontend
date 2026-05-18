@@ -16,7 +16,7 @@ interface UserRow {
 
 interface UsersResponse {
   data: UserRow[]
-  meta?: { total?: number; page?: number }
+  meta?: { total?: number; page?: number; totalPages?: number }
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -356,6 +356,7 @@ export default function AdminUsersPage() {
             </tbody>
           </table>
         </div>
+        
       )}
 
       {/* Pagination */}
