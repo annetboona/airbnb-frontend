@@ -34,40 +34,6 @@ function EmptyState({ savedOnly, onClear }: { savedOnly: boolean; onClear: () =>
   )
 }
 
-const LOCATION_COORDINATES: Record<string, { x: number; y: number }> = {
-  kigali: { x: 50, y: 50 },
-  gisenyi: { x: 25, y: 30 },
-  rubavu: { x: 24, y: 32 },
-  musanze: { x: 40, y: 25 },
-  ruhengeri: { x: 41, y: 26 },
-  butare: { x: 42, y: 75 },
-  huye: { x: 43, y: 76 },
-  kibuye: { x: 22, y: 55 },
-  karongi: { x: 23, y: 56 },
-  nyagatare: { x: 80, y: 20 },
-  rwamagana: { x: 70, y: 48 },
-  gitarama: { x: 42, y: 53 },
-  muhanga: { x: 43, y: 54 },
-}
-
-function getCoordinates(listing: Listing) {
-  const locKey = listing.location.split(",")[0]?.trim().toLowerCase() ?? ""
-  if (LOCATION_COORDINATES[locKey]) {
-    const hash = listing.id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)
-    const jitterX = (hash % 12) - 6 // -6% to +6% spread
-    const jitterY = ((hash >> 2) % 12) - 6
-    return {
-      x: Math.max(12, Math.min(88, LOCATION_COORDINATES[locKey].x + jitterX)),
-      y: Math.max(12, Math.min(88, LOCATION_COORDINATES[locKey].y + jitterY)),
-    }
-  }
-  const hash = listing.id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)
-  return {
-    x: 20 + (hash % 60),
-    y: 20 + ((hash >> 2) % 60),
-  }
-}
-
 export default function ListingsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -87,6 +53,58 @@ export default function ListingsPage() {
   const [hoveredListingId, setHoveredListingId] = useState<string | null>(null)
   const [selectedPin, setSelectedPin]           = useState<Listing | null>(null)
   const [showMap, setShowMap]                   = useState(true)
+
+  // Dynamically extract all unique location cities from the actual listings in the database
+  const uniqueLocations = useMemo(() => {
+    const locMap = new Map<string, { name: string; count: number }>()
+    state.listings.forEach((l) => {
+      const city = l.location.split(",")[0]?.trim() ?? l.location
+      if (!city) return
+      const key = city.toLowerCase()
+      if (!locMap.has(key)) {
+        locMap.set(key, { name: city, count: 1 })
+      } else {
+        locMap.get(key)!.count++
+      }
+    })
+    return Array.from(locMap.values())
+  }, [state.listings])
+
+  // Dynamically calculate high-contrast evenly distributed coordinate points on the map for each location city in the system
+  const locationCoords = useMemo(() => {
+    const coords: Record<string, { x: number; y: number }> = {}
+    uniqueLocations.forEach((loc, idx) => {
+      const key = loc.name.toLowerCase()
+      // Generate clean, high-contrast, evenly spaced coordinate points spread across the map area (from 15% to 85%)
+      const angle = (idx * 2 * Math.PI) / Math.max(1, uniqueLocations.length)
+      const radius = 22 + (idx % 3) * 11 // Dynamic spacing rings: 22%, 33%, 44%
+      coords[key] = {
+        x: Math.round(50 + Math.cos(angle) * radius),
+        y: Math.round(50 + Math.sin(angle) * radius),
+      }
+    })
+    return coords
+  }, [uniqueLocations])
+
+  // Coordinate mapper for dynamic pins
+  const getCoordinates = (listing: Listing) => {
+    const locKey = listing.location.split(",")[0]?.trim().toLowerCase() ?? ""
+    if (locationCoords[locKey]) {
+      const hash = listing.id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)
+      const jitterX = (hash % 10) - 5 // Subtle jitter: -5% to +5% spread so pins in the same city don't completely overlap
+      const jitterY = ((hash >> 2) % 10) - 5
+      return {
+        x: Math.max(12, Math.min(88, locationCoords[locKey].x + jitterX)),
+        y: Math.max(12, Math.min(88, locationCoords[locKey].y + jitterY)),
+      }
+    }
+    // Fallback hash mapping
+    const hash = listing.id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)
+    return {
+      x: 20 + (hash % 60),
+      y: 20 + ((hash >> 2) % 60),
+    }
+  }
 
   // Sync URL ?q param → store filter on mount / URL change
   useEffect(() => {
@@ -308,53 +326,51 @@ export default function ListingsPage() {
 
           {/* Map Sticky Panel */}
           {showMap && (
-            <div className="w-full lg:w-[450px] xl:w-[480px] shrink-0 lg:sticky lg:top-24 h-[550px] rounded-3xl bg-gray-950 overflow-hidden shadow-2xl relative border border-gray-800 animate-fade-in flex flex-col justify-between">
+            <div className="w-full lg:w-[450px] xl:w-[480px] shrink-0 lg:sticky lg:top-24 h-[550px] rounded-3xl bg-[#faf8f5] overflow-hidden shadow-xl relative border border-orange-100 animate-fade-in flex flex-col justify-between">
               
               {/* Map Title Tag */}
-              <div className="absolute top-4 left-4 z-10 bg-gray-900/90 backdrop-blur-md px-3 py-1.5 rounded-full border border-gray-800 flex items-center gap-1.5 shadow-lg">
+              <div className="absolute top-4 left-4 z-10 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full border border-orange-100 flex items-center gap-1.5 shadow-md">
                 <span className="w-2 h-2 rounded-full bg-orange-500 animate-ping" />
-                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Live Regional Explorer</span>
+                <span className="text-[10px] text-orange-600 font-black uppercase tracking-wider">Live Regional Explorer</span>
               </div>
 
               {/* Blueprint Grid Background */}
-              <div className="absolute inset-0 select-none opacity-40">
+              <div className="absolute inset-0 select-none opacity-60">
                 <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
                   <defs>
                     <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
-                      <path d="M 30 0 L 0 0 0 30" fill="none" stroke="rgba(249, 115, 22, 0.08)" strokeWidth="1" />
+                      <path d="M 30 0 L 0 0 0 30" fill="none" stroke="rgba(249, 115, 22, 0.12)" strokeWidth="1" />
                     </pattern>
                   </defs>
                   <rect width="100%" height="100%" fill="url(#grid)" />
-                  <circle cx="50%" cy="50%" r="50" fill="none" stroke="rgba(249,115,22,0.12)" strokeWidth="1" strokeDasharray="3 3" />
-                  <circle cx="50%" cy="50%" r="120" fill="none" stroke="rgba(249,115,22,0.07)" strokeWidth="1" />
-                  <circle cx="50%" cy="50%" r="200" fill="none" stroke="rgba(249,115,22,0.03)" strokeWidth="1.5" strokeDasharray="6 6" />
-                  <path d="M 20,40 Q 30,20 50,15 T 80,30 T 90,60 T 60,85 T 30,80 Z" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="2" strokeDasharray="5 5" />
+                  <circle cx="50%" cy="50%" r="60" fill="none" stroke="rgba(249,115,22,0.15)" strokeWidth="1" strokeDasharray="3 3" />
+                  <circle cx="50%" cy="50%" r="140" fill="none" stroke="rgba(249,115,22,0.08)" strokeWidth="1" />
+                  <circle cx="50%" cy="50%" r="220" fill="none" stroke="rgba(249,115,22,0.04)" strokeWidth="1.5" strokeDasharray="6 6" />
                 </svg>
               </div>
 
-              {/* clickable Rwanda cities */}
-              {[
-                { name: "Kigali", x: 50, y: 50 },
-                { name: "Musanze", x: 40, y: 25 },
-                { name: "Rubavu", x: 24, y: 32 },
-                { name: "Huye", x: 43, y: 76 },
-                { name: "Rwamagana", x: 70, y: 48 },
-              ].map((city) => (
-                <button
-                  key={city.name}
-                  onClick={() => handleRegionClick(city.name)}
-                  className={`absolute text-[11px] font-bold transition-all px-2.5 py-1 rounded-lg border backdrop-blur-md z-10 -translate-x-1/2 -translate-y-1/2 flex items-center gap-1.5 shadow-md
-                    ${
-                      urlLocation.toLowerCase() === city.name.toLowerCase()
-                        ? "bg-orange-500 text-white border-orange-400 shadow-orange-500/20 scale-105"
-                        : "bg-gray-900/80 text-gray-300 border-gray-800 hover:text-white hover:border-gray-500 hover:bg-gray-800"
-                    }`}
-                  style={{ left: `${city.x}%`, top: `${city.y}%` }}
-                >
-                  <MapPin size={9} className="shrink-0" />
-                  {city.name}
-                </button>
-              ))}
+              {/* Clickable Dynamic Cities/Locations in the entire database */}
+              {uniqueLocations.map((loc) => {
+                const coords = locationCoords[loc.name.toLowerCase()]
+                if (!coords) return null
+                const isCurrent = urlLocation.toLowerCase() === loc.name.toLowerCase()
+                return (
+                  <button
+                    key={loc.name}
+                    onClick={() => handleRegionClick(loc.name)}
+                    className={`absolute text-[10px] font-black tracking-wide transition-all px-2.5 py-1.5 rounded-xl border backdrop-blur-md z-10 -translate-x-1/2 -translate-y-1/2 flex items-center gap-1.5 shadow-md active:scale-95
+                      ${
+                        isCurrent
+                          ? "bg-orange-500 text-white border-orange-400 shadow-orange-500/20 scale-105"
+                          : "bg-white text-gray-800 border-gray-200 hover:border-orange-500 hover:bg-orange-50"
+                      }`}
+                    style={{ left: `${coords.x}%`, top: `${coords.y}%` }}
+                  >
+                    <MapPin size={9} className="shrink-0 text-orange-500" />
+                    {loc.name}
+                  </button>
+                )
+              })}
 
               {/* Listing Marker Pins */}
               {filtered.map((l) => {
@@ -371,11 +387,11 @@ export default function ListingsPage() {
                     style={{ left: `${coords.x}%`, top: `${coords.y}%` }}
                   >
                     <div
-                      className={`px-2.5 py-1 rounded-full text-[10px] font-black text-white shadow-lg transition-all flex items-center justify-center gap-1 border
+                      className={`px-2.5 py-1 rounded-full text-[10px] font-black shadow-lg transition-all flex items-center justify-center gap-1 border
                       ${
                         isHovered
-                          ? "bg-orange-500 border-orange-400 scale-105 shadow-orange-500/30"
-                          : "bg-gray-900/90 border-gray-700 hover:border-orange-500 hover:bg-gray-850"
+                          ? "bg-orange-600 text-white border-orange-550 scale-105 shadow-orange-500/30"
+                          : "bg-orange-500 text-white border-orange-400 hover:bg-orange-600"
                       }`}
                     >
                       <span className="w-1 h-1 rounded-full bg-white animate-pulse" />
@@ -390,35 +406,35 @@ export default function ListingsPage() {
 
               {/* Marker Popup Card */}
               {selectedPin && (
-                <div className="absolute bottom-4 left-4 right-4 bg-gray-900/95 backdrop-blur-md rounded-2xl p-3 border border-gray-800 z-40 shadow-2xl flex gap-3 animate-fade-in">
+                <div className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-md rounded-2xl p-3 border border-orange-100 z-40 shadow-2xl flex gap-3 animate-fade-in">
                   {selectedPin.photos?.[0]?.url ? (
                     <img
                       src={selectedPin.photos[0].url}
                       alt={selectedPin.title}
-                      className="w-16 h-16 rounded-xl object-cover shrink-0 border border-gray-800"
+                      className="w-16 h-16 rounded-xl object-cover shrink-0 border border-gray-100"
                     />
                   ) : (
-                    <div className="w-16 h-16 rounded-xl bg-gray-800 flex items-center justify-center text-gray-400 shrink-0 border border-gray-700">
+                    <div className="w-16 h-16 rounded-xl bg-orange-50 flex items-center justify-center text-orange-400 shrink-0 border border-orange-100">
                       <MapPin size={20} />
                     </div>
                   )}
                   <div className="flex-1 min-w-0 flex flex-col justify-between">
                     <div>
                       <div className="flex items-center justify-between gap-2">
-                        <h4 className="text-xs font-black text-white truncate">{selectedPin.title}</h4>
+                        <h4 className="text-xs font-black text-gray-900 truncate">{selectedPin.title}</h4>
                         <button
                           onClick={() => setSelectedPin(null)}
-                          className="text-gray-400 hover:text-white p-0.5 rounded-full hover:bg-gray-800"
+                          className="text-gray-400 hover:text-gray-600 p-0.5 rounded-full hover:bg-gray-150"
                         >
                           <X size={12} />
                         </button>
                       </div>
-                      <p className="text-[10px] text-gray-400 line-clamp-1 mt-0.5">{selectedPin.description}</p>
+                      <p className="text-[10px] text-gray-500 line-clamp-1 mt-0.5">{selectedPin.description}</p>
                     </div>
                     <div className="flex items-center justify-between mt-1">
-                      <span className="text-xs font-black text-orange-500">
+                      <span className="text-xs font-black text-orange-650">
                         ${selectedPin.pricePerNight}
-                        <span className="text-[10px] text-gray-500 font-normal">/night</span>
+                        <span className="text-[10px] text-gray-400 font-normal">/night</span>
                       </span>
                       <button
                         onClick={() => navigate(`/listings/${selectedPin.id}`)}
