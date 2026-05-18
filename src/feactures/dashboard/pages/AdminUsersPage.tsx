@@ -2,7 +2,7 @@ import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import api from "../../../lib/axios"
 import toast from "react-hot-toast"
-import { Search, X, AlertCircle, RefreshCw } from "lucide-react"
+import { Search, X, AlertCircle, RefreshCw, Download } from "lucide-react"
 
 interface UserRow {
   id: string
@@ -127,6 +127,7 @@ export default function AdminUsersPage() {
   const [search, setSearch]           = useState("")
   const [pendingAction, setPending]   = useState<PendingAction | null>(null)
   const [page, setPage]               = useState(1)
+  const [exporting, setExporting]     = useState(false)
 
   // ── Fetch users ────────────────────────────────────────────────────────────
   const q = useQuery({
@@ -212,12 +213,73 @@ export default function AdminUsersPage() {
     }
   })()
 
+  const handleExportCSV = async () => {
+    try {
+      setExporting(true)
+      const { data } = await api.get<UsersResponse>(`/users?page=1&limit=1000`)
+      const allUsers = data?.data ?? []
+
+      if (allUsers.length === 0) {
+        toast.error("No users to export")
+        return
+      }
+
+      const headers = ["ID", "Name", "Email", "Username", "Phone", "Role", "Disabled", "Last Logged In", "Created At"]
+      const csvRows = [
+        headers.join(","),
+        ...allUsers.map((u: any) => [
+          `"${u.id || ""}"`,
+          `"${(u.name || "").replace(/"/g, '""')}"`,
+          `"${(u.email || "").replace(/"/g, '""')}"`,
+          `"${(u.username || "").replace(/"/g, '""')}"`,
+          `"${(u.phone || "").replace(/"/g, '""')}"`,
+          `"${u.role || ""}"`,
+          `"${u.disabled ? "Yes" : "No"}"`,
+          `"${u.lastLoggedIn ? new Date(u.lastLoggedIn).toLocaleString() : "Never"}"`,
+          `"${u.createdAt ? new Date(u.createdAt).toLocaleString() : ""}"`
+        ].join(","))
+      ]
+
+      const csvContent = "\uFEFF" + csvRows.join("\n")
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.setAttribute("href", url)
+      link.setAttribute("download", `airbnb_users_${new Date().toISOString().slice(0, 10)}.csv`)
+      link.style.visibility = "hidden"
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      toast.success("Users exported successfully!")
+    } catch (err) {
+      console.error("Export error:", err)
+      toast.error("Failed to export users")
+    } finally {
+      setExporting(false)
+    }
+  }
+
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">All Users</h1>
-        <p className="text-sm text-gray-500">Manage roles, disable accounts, or remove users.</p>
+      <div className="flex justify-between items-start gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">All Users</h1>
+          <p className="text-sm text-gray-500">Manage roles, disable accounts, or remove users.</p>
+        </div>
+        <button
+          type="button"
+          onClick={handleExportCSV}
+          disabled={exporting}
+          className="flex items-center gap-1.5 px-4 py-2 border border-gray-200 text-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 disabled:opacity-50 transition shadow-sm"
+        >
+          {exporting ? (
+            <RefreshCw size={14} className="animate-spin text-orange-500" />
+          ) : (
+            <Download size={14} className="text-orange-500" />
+          )}
+          <span>{exporting ? "Exporting…" : "Export CSV"}</span>
+        </button>
       </div>
 
       {/* Search */}

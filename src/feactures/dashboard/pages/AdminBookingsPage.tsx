@@ -2,10 +2,12 @@ import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import api from "../../../lib/axios"
 import { BookingsPanel } from "../dashboardPanels"
-import { AlertCircle, Lock } from "lucide-react"
+import { AlertCircle, Lock, Download, RefreshCw } from "lucide-react"
+import toast from "react-hot-toast"
 
 export default function AdminBookingsPage() {
   const [page, setPage] = useState(1)
+  const [exporting, setExporting] = useState(false)
 
   const q = useQuery({
     queryKey: ["admin-all-bookings", page],
@@ -20,14 +22,92 @@ export default function AdminBookingsPage() {
   // ── 403 specific error ─────────────────────────────────────────────────────
   const is403 = q.error && (q.error as any)?.response?.status === 403
 
+  const handleExportCSV = async () => {
+    try {
+      setExporting(true)
+      const { data } = await api.get<any>("/bookings", {
+        params: { limit: 1000, page: 1 },
+      })
+      const allBookings = data?.data ?? []
+
+      if (allBookings.length === 0) {
+        toast.error("No bookings to export")
+        return
+      }
+
+      const headers = [
+        "Booking ID",
+        "Guest Name",
+        "Guest Email",
+        "Listing Title",
+        "Location",
+        "Check-In Date",
+        "Check-Out Date",
+        "Total Price ($)",
+        "Guests Count",
+        "Status",
+        "Created At"
+      ]
+
+      const csvRows = [
+        headers.join(","),
+        ...allBookings.map((b: any) => [
+          `"${b.id || ""}"`,
+          `"${(b.guest?.name || "").replace(/"/g, '""')}"`,
+          `"${(b.guest?.email || "").replace(/"/g, '""')}"`,
+          `"${(b.listing?.title || "").replace(/"/g, '""')}"`,
+          `"${(b.listing?.location || "").replace(/"/g, '""')}"`,
+          `"${b.checkIn ? new Date(b.checkIn).toLocaleDateString() : ""}"`,
+          `"${b.checkOut ? new Date(b.checkOut).toLocaleDateString() : ""}"`,
+          `"${b.totalPrice || 0}"`,
+          `"${b.guests || 1}"`,
+          `"${b.status || ""}"`,
+          `"${b.createdAt ? new Date(b.createdAt).toLocaleString() : ""}"`
+        ].join(","))
+      ]
+
+      const csvContent = "\uFEFF" + csvRows.join("\n")
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.setAttribute("href", url)
+      link.setAttribute("download", `airbnb_bookings_${new Date().toISOString().slice(0, 10)}.csv`)
+      link.style.visibility = "hidden"
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      toast.success("Bookings exported successfully!")
+    } catch (err) {
+      console.error("Export error:", err)
+      toast.error("Failed to export bookings")
+    } finally {
+      setExporting(false)
+    }
+  }
+
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">All Bookings</h1>
-        <p className="text-sm text-gray-500">
-          Platform-wide reservation log —{" "}
-          {q.isLoading ? "loading…" : `${q.data?.length ?? 0} bookings loaded`}.
-        </p>
+      <div className="flex justify-between items-start gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">All Bookings</h1>
+          <p className="text-sm text-gray-500">
+            Platform-wide reservation log —{" "}
+            {q.isLoading ? "loading…" : `${q.data?.data?.length ?? 0} bookings loaded`}.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={handleExportCSV}
+          disabled={exporting}
+          className="flex items-center gap-1.5 px-4 py-2 border border-gray-200 text-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-50 disabled:opacity-50 transition shadow-sm shrink-0"
+        >
+          {exporting ? (
+            <RefreshCw size={14} className="animate-spin text-orange-500" />
+          ) : (
+            <Download size={14} className="text-orange-500" />
+          )}
+          <span>{exporting ? "Exporting…" : "Export CSV"}</span>
+        </button>
       </div>
 
       {/* 403 — clear explanation */}
