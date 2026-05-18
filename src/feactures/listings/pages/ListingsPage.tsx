@@ -110,7 +110,8 @@ export default function ListingsPage() {
       zoom = 12
     }
 
-    return `https://maps.google.com/maps?q=${encodeURIComponent(query)}&t=&z=${zoom}&ie=UTF8&iwloc=&output=embed`
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "AIzaSyCdhSd0TiA6w7L8019ekxSU3rXQmq5Sm6Y"
+    return `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${encodeURIComponent(query)}&zoom=${zoom}`
   }, [activeListing, urlLocation, filtered])
 
   // Sync URL ?q param → store filter on mount / URL change

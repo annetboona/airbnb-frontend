@@ -358,8 +358,10 @@ export default function ListingDetail() {
               <iframe
                 width="100%"
                 height="300"
-                src={`https://maps.google.com/maps?q=${encodeURIComponent(listing.location)}&t=&z=13&ie=UTF8&iwloc=&output=embed`}
-                className="rounded-2xl"
+                src={`https://www.google.com/maps/embed/v1/place?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "AIzaSyCdhSd0TiA6w7L8019ekxSU3rXQmq5Sm6Y"}&q=${encodeURIComponent(listing.location)}`}
+                className="rounded-2xl border-0"
+                allowFullScreen
+                loading="lazy"
               ></iframe>
               <div className="absolute bottom-4 right-4">
                 <a
