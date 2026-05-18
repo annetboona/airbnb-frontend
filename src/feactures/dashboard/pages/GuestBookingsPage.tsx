@@ -50,7 +50,7 @@ export default function GuestBookingsPage() {
         refetch={() => q.refetch()}
         // ✅ Instead of cancelling immediately, open the modal
         onGuestCancel={async (id) => {
-          const booking = (q.data?.data ?? []).find((b) => b.id === id) ?? null
+          const booking = (q.data?.data ?? []).find((b: any) => b.id === id) ?? null
           setPendingCancel(booking ?? ({ id } as Booking))
         }}
       />

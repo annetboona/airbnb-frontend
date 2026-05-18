@@ -360,7 +360,7 @@ export default function AdminUsersPage() {
       )}
 
       {/* Pagination */}
-      {q.data?.meta && q.data.meta.totalPages > 1 && (
+      {q.data?.meta?.totalPages && q.data.meta.totalPages > 1 && (
         <div className="flex justify-between items-center mt-4">
           <button
             type="button"
@@ -375,7 +375,7 @@ export default function AdminUsersPage() {
           </span>
           <button
             type="button"
-            onClick={() => setPage((p) => Math.min(q.data.meta.totalPages, p + 1))}
+            onClick={() => setPage((p) => Math.min(q.data?.meta?.totalPages || 1, p + 1))}
             disabled={page === q.data.meta.totalPages}
             className="px-3 py-1.5 border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50 disabled:opacity-50 transition"
           >

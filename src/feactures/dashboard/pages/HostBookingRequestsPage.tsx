@@ -48,7 +48,7 @@ export default function HostBookingRequestsPage() {
   })
 
   const handleHostAction = async (id: string, status: "CONFIRMED" | "CANCELLED") => {
-    const booking = (q.data ?? []).find((b) => b.id === id) ?? ({ id } as Booking)
+    const booking = (q.data?.data ?? []).find((b: any) => b.id === id) ?? ({ id } as Booking)
 
     if (status === "CONFIRMED") {
       // ✅ Confirm immediately — no reason needed
