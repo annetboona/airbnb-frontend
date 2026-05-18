@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react"
-import { useSearchParams } from "react-router-dom"
+import { useSearchParams, useNavigate } from "react-router-dom"
 import { Heart, SlidersHorizontal, X, Search, RefreshCw, Sparkles, MapPin } from "lucide-react"
 import toast from "react-hot-toast"
 import { useStore } from "../../../store/StoreContext"
@@ -34,8 +34,43 @@ function EmptyState({ savedOnly, onClear }: { savedOnly: boolean; onClear: () =>
   )
 }
 
+const LOCATION_COORDINATES: Record<string, { x: number; y: number }> = {
+  kigali: { x: 50, y: 50 },
+  gisenyi: { x: 25, y: 30 },
+  rubavu: { x: 24, y: 32 },
+  musanze: { x: 40, y: 25 },
+  ruhengeri: { x: 41, y: 26 },
+  butare: { x: 42, y: 75 },
+  huye: { x: 43, y: 76 },
+  kibuye: { x: 22, y: 55 },
+  karongi: { x: 23, y: 56 },
+  nyagatare: { x: 80, y: 20 },
+  rwamagana: { x: 70, y: 48 },
+  gitarama: { x: 42, y: 53 },
+  muhanga: { x: 43, y: 54 },
+}
+
+function getCoordinates(listing: Listing) {
+  const locKey = listing.location.split(",")[0]?.trim().toLowerCase() ?? ""
+  if (LOCATION_COORDINATES[locKey]) {
+    const hash = listing.id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)
+    const jitterX = (hash % 12) - 6 // -6% to +6% spread
+    const jitterY = ((hash >> 2) % 12) - 6
+    return {
+      x: Math.max(12, Math.min(88, LOCATION_COORDINATES[locKey].x + jitterX)),
+      y: Math.max(12, Math.min(88, LOCATION_COORDINATES[locKey].y + jitterY)),
+    }
+  }
+  const hash = listing.id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)
+  return {
+    x: 20 + (hash % 60),
+    y: 20 + ((hash >> 2) % 60),
+  }
+}
+
 export default function ListingsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
+  const navigate = useNavigate()
   const urlQuery    = searchParams.get("q")        ?? ""
   const urlLocation = searchParams.get("location") ?? ""
   const urlCategory = searchParams.get("category") ?? ""
@@ -47,6 +82,11 @@ export default function ListingsPage() {
   const [savedPanelOpen, setSavedPanelOpen] = useState(false)
   const [aiQuery, setAiQuery]             = useState("")
   const [aiSearching, setAiSearching]     = useState(false)
+
+  // Interactive map states
+  const [hoveredListingId, setHoveredListingId] = useState<string | null>(null)
+  const [selectedPin, setSelectedPin]           = useState<Listing | null>(null)
+  const [showMap, setShowMap]                   = useState(true)
 
   // Sync URL ?q param → store filter on mount / URL change
   useEffect(() => {
@@ -93,6 +133,14 @@ export default function ListingsPage() {
     dispatch({ type: "RESET" })
     setSavedOnly(false)
     setSearchParams({})
+    setSelectedPin(null)
+  }
+
+  const handleRegionClick = (regionName: string) => {
+    const newParams = new URLSearchParams(searchParams)
+    newParams.set("location", regionName)
+    setSearchParams(newParams)
+    setSelectedPin(null)
   }
 
   const hasActiveFilters = urlQuery || urlLocation || urlCategory
@@ -108,7 +156,7 @@ export default function ListingsPage() {
 
       {/* Active filter chips */}
       {hasActiveFilters && (
-        <div className="max-w-3xl mx-auto px-6 pt-4 flex flex-wrap gap-2">
+        <div className="max-w-7xl mx-auto px-6 pt-4 flex flex-wrap gap-2">
           {urlQuery && (
             <span className="flex items-center gap-1.5 bg-orange-100 text-orange-700 text-xs font-semibold px-3 py-1.5 rounded-full">
               <Search size={12} /> "{urlQuery}"
@@ -134,7 +182,7 @@ export default function ListingsPage() {
       )}
 
       {/* Natural language AI search */}
-      <div className="max-w-3xl mx-auto px-6 pt-4 mb-6">
+      <div className="max-w-7xl mx-auto px-6 pt-4 mb-6">
         <div className="rounded-2xl border border-orange-100 bg-white p-4 flex flex-col sm:flex-row gap-2 shadow-sm">
           <div className="flex items-start gap-2 flex-1 min-w-0">
             <Sparkles className="text-orange-500 shrink-0 mt-1" size={20} aria-hidden />
@@ -171,7 +219,7 @@ export default function ListingsPage() {
       </div>
 
       {/* Filter bar */}
-      <div className="flex items-center justify-between px-6 mb-5">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-6 mb-5 max-w-7xl mx-auto">
         <p className="text-sm text-gray-600">
           {isFetching && !isLoading && <span className="text-orange-400 mr-2">Refreshing…</span>}
           {savedOnly
@@ -179,7 +227,7 @@ export default function ListingsPage() {
             : <> <span className="font-bold text-gray-900">{filtered.length}</span> listings found</>
           }
         </p>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center flex-wrap gap-2">
           <button
             onClick={() => setSavedPanelOpen(true)}
             className={`flex items-center gap-1.5 text-sm font-medium px-4 py-1.5 rounded-full border transition-all duration-200 ${
@@ -199,6 +247,15 @@ export default function ListingsPage() {
             {savedOnly ? "All listings" : "Saved only"}
           </button>
           <button
+            onClick={() => setShowMap((m) => !m)}
+            className={`flex items-center gap-1.5 text-sm font-medium px-4 py-1.5 rounded-full border transition-all duration-200 ${
+              showMap ? "bg-orange-500 border-orange-500 text-white" : "bg-white border-gray-200 text-gray-600 hover:border-orange-400 hover:text-orange-500"
+            }`}
+          >
+            <MapPin size={13} />
+            {showMap ? "Hide Map" : "Show Map"}
+          </button>
+          <button
             onClick={clearAll}
             className="flex items-center gap-1.5 text-sm font-medium px-4 py-1.5 rounded-full border border-gray-200 bg-white text-gray-600 hover:border-orange-400 hover:text-orange-500 transition-colors"
           >
@@ -207,27 +264,177 @@ export default function ListingsPage() {
         </div>
       </div>
 
-      {/* Content */}
-      {isLoading ? (
-        <Spinner />
-      ) : isError ? (
-        <div className="flex flex-col items-center justify-center py-24 text-center">
-          <p className="text-gray-500 mb-4">Failed to load listings.</p>
-          <button
-            onClick={() => refetch()}
-            className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-5 py-2 rounded-full transition-colors"
-          >
-            <RefreshCw size={14} /> Try again
-          </button>
+      {/* Split Grid Layout */}
+      <div className="max-w-7xl mx-auto px-6 pb-12">
+        <div className="flex flex-col lg:flex-row gap-8 items-start">
+
+          {/* Listings Panel */}
+          <div className="flex-1 w-full">
+            {isLoading ? (
+              <Spinner />
+            ) : isError ? (
+              <div className="flex flex-col items-center justify-center py-24 text-center">
+                <p className="text-gray-500 mb-4">Failed to load listings.</p>
+                <button
+                  onClick={() => refetch()}
+                  className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-5 py-2 rounded-full transition-colors"
+                >
+                  <RefreshCw size={14} /> Try again
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                {filtered.length > 0 ? (
+                  filtered.map((listing, i) => (
+                    <div
+                      key={listing.id}
+                      className={`transition-all duration-300 ${
+                        hoveredListingId === listing.id
+                          ? "scale-[1.02] ring-2 ring-orange-500 rounded-2xl shadow-lg"
+                          : ""
+                      }`}
+                      onMouseEnter={() => setHoveredListingId(listing.id)}
+                      onMouseLeave={() => setHoveredListingId(null)}
+                    >
+                      <ListingCard listing={listing} index={i} />
+                    </div>
+                  ))
+                ) : (
+                  <EmptyState savedOnly={savedOnly} onClear={clearAll} />
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Map Sticky Panel */}
+          {showMap && (
+            <div className="w-full lg:w-[450px] xl:w-[480px] shrink-0 lg:sticky lg:top-24 h-[550px] rounded-3xl bg-gray-950 overflow-hidden shadow-2xl relative border border-gray-800 animate-fade-in flex flex-col justify-between">
+              
+              {/* Map Title Tag */}
+              <div className="absolute top-4 left-4 z-10 bg-gray-900/90 backdrop-blur-md px-3 py-1.5 rounded-full border border-gray-800 flex items-center gap-1.5 shadow-lg">
+                <span className="w-2 h-2 rounded-full bg-orange-500 animate-ping" />
+                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Live Regional Explorer</span>
+              </div>
+
+              {/* Blueprint Grid Background */}
+              <div className="absolute inset-0 select-none opacity-40">
+                <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
+                      <path d="M 30 0 L 0 0 0 30" fill="none" stroke="rgba(249, 115, 22, 0.08)" strokeWidth="1" />
+                    </pattern>
+                  </defs>
+                  <rect width="100%" height="100%" fill="url(#grid)" />
+                  <circle cx="50%" cy="50%" r="50" fill="none" stroke="rgba(249,115,22,0.12)" strokeWidth="1" strokeDasharray="3 3" />
+                  <circle cx="50%" cy="50%" r="120" fill="none" stroke="rgba(249,115,22,0.07)" strokeWidth="1" />
+                  <circle cx="50%" cy="50%" r="200" fill="none" stroke="rgba(249,115,22,0.03)" strokeWidth="1.5" strokeDasharray="6 6" />
+                  <path d="M 20,40 Q 30,20 50,15 T 80,30 T 90,60 T 60,85 T 30,80 Z" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="2" strokeDasharray="5 5" />
+                </svg>
+              </div>
+
+              {/* clickable Rwanda cities */}
+              {[
+                { name: "Kigali", x: 50, y: 50 },
+                { name: "Musanze", x: 40, y: 25 },
+                { name: "Rubavu", x: 24, y: 32 },
+                { name: "Huye", x: 43, y: 76 },
+                { name: "Rwamagana", x: 70, y: 48 },
+              ].map((city) => (
+                <button
+                  key={city.name}
+                  onClick={() => handleRegionClick(city.name)}
+                  className={`absolute text-[11px] font-bold transition-all px-2.5 py-1 rounded-lg border backdrop-blur-md z-10 -translate-x-1/2 -translate-y-1/2 flex items-center gap-1.5 shadow-md
+                    ${
+                      urlLocation.toLowerCase() === city.name.toLowerCase()
+                        ? "bg-orange-500 text-white border-orange-400 shadow-orange-500/20 scale-105"
+                        : "bg-gray-900/80 text-gray-300 border-gray-800 hover:text-white hover:border-gray-500 hover:bg-gray-800"
+                    }`}
+                  style={{ left: `${city.x}%`, top: `${city.y}%` }}
+                >
+                  <MapPin size={9} className="shrink-0" />
+                  {city.name}
+                </button>
+              ))}
+
+              {/* Listing Marker Pins */}
+              {filtered.map((l) => {
+                const coords = getCoordinates(l)
+                const isHovered = hoveredListingId === l.id || selectedPin?.id === l.id
+                return (
+                  <button
+                    key={l.id}
+                    onClick={() => setSelectedPin(l)}
+                    onMouseEnter={() => setHoveredListingId(l.id)}
+                    onMouseLeave={() => setHoveredListingId(null)}
+                    className={`absolute -translate-x-1/2 -translate-y-1/2 z-20 group transition-all duration-300
+                      ${isHovered ? "scale-110 z-30" : "scale-100"}`}
+                    style={{ left: `${coords.x}%`, top: `${coords.y}%` }}
+                  >
+                    <div
+                      className={`px-2.5 py-1 rounded-full text-[10px] font-black text-white shadow-lg transition-all flex items-center justify-center gap-1 border
+                      ${
+                        isHovered
+                          ? "bg-orange-500 border-orange-400 scale-105 shadow-orange-500/30"
+                          : "bg-gray-900/90 border-gray-700 hover:border-orange-500 hover:bg-gray-850"
+                      }`}
+                    >
+                      <span className="w-1 h-1 rounded-full bg-white animate-pulse" />
+                      ${l.pricePerNight}
+                    </div>
+                    {isHovered && (
+                      <div className="absolute inset-0 rounded-full border border-orange-500 animate-ping opacity-60 scale-125" />
+                    )}
+                  </button>
+                )
+              })}
+
+              {/* Marker Popup Card */}
+              {selectedPin && (
+                <div className="absolute bottom-4 left-4 right-4 bg-gray-900/95 backdrop-blur-md rounded-2xl p-3 border border-gray-800 z-40 shadow-2xl flex gap-3 animate-fade-in">
+                  {selectedPin.photos?.[0]?.url ? (
+                    <img
+                      src={selectedPin.photos[0].url}
+                      alt={selectedPin.title}
+                      className="w-16 h-16 rounded-xl object-cover shrink-0 border border-gray-800"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 rounded-xl bg-gray-800 flex items-center justify-center text-gray-400 shrink-0 border border-gray-700">
+                      <MapPin size={20} />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between gap-2">
+                        <h4 className="text-xs font-black text-white truncate">{selectedPin.title}</h4>
+                        <button
+                          onClick={() => setSelectedPin(null)}
+                          className="text-gray-400 hover:text-white p-0.5 rounded-full hover:bg-gray-800"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                      <p className="text-[10px] text-gray-400 line-clamp-1 mt-0.5">{selectedPin.description}</p>
+                    </div>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-xs font-black text-orange-500">
+                        ${selectedPin.pricePerNight}
+                        <span className="text-[10px] text-gray-500 font-normal">/night</span>
+                      </span>
+                      <button
+                        onClick={() => navigate(`/listings/${selectedPin.id}`)}
+                        className="bg-orange-500 hover:bg-orange-600 active:scale-95 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all"
+                      >
+                        View Details
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 px-6 pb-12">
-          {filtered.length > 0
-            ? filtered.map((listing, i) => <ListingCard key={listing.id} listing={listing} index={i} />)
-            : <EmptyState savedOnly={savedOnly} onClear={clearAll} />
-          }
-        </div>
-      )}
+      </div>
 
       <SavedListings open={savedPanelOpen} onClose={() => setSavedPanelOpen(false)} />
     </div>
