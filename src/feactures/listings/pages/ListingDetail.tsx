@@ -359,10 +359,6 @@ export default function ListingDetail() {
                 width="100%"
                 height="300"
                 src={`https://maps.google.com/maps?q=${encodeURIComponent(listing.location)}&t=&z=13&ie=UTF8&iwloc=&output=embed`}
-                frameBorder="0"
-                scrolling="no"
-                marginHeight="0"
-                marginWidth="0"
                 className="rounded-2xl"
               ></iframe>
               <div className="absolute bottom-4 right-4">

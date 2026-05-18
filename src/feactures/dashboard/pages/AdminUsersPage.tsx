@@ -126,12 +126,13 @@ export default function AdminUsersPage() {
   const qc = useQueryClient()
   const [search, setSearch]           = useState("")
   const [pendingAction, setPending]   = useState<PendingAction | null>(null)
+  const [page, setPage]               = useState(1)
 
   // ── Fetch users ────────────────────────────────────────────────────────────
   const q = useQuery({
-    queryKey: ["admin-users"],
+    queryKey: ["admin-users", page],
     queryFn: async () => {
-      const { data } = await api.get<UsersResponse>("/users")
+      const { data } = await api.get<UsersResponse>(`/users?page=${page}&limit=10`)
       return data
     },
   })
@@ -357,7 +358,32 @@ export default function AdminUsersPage() {
         </div>
       )}
 
-      <p className="text-xs text-gray-400">
+      {/* Pagination */}
+      {q.data?.meta && q.data.meta.totalPages > 1 && (
+        <div className="flex justify-between items-center mt-4">
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className="px-3 py-1.5 border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50 disabled:opacity-50 transition"
+          >
+            Previous
+          </button>
+          <span className="text-xs text-gray-500 font-medium">
+            Page {page} of {q.data.meta.totalPages}
+          </span>
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.min(q.data.meta.totalPages, p + 1))}
+            disabled={page === q.data.meta.totalPages}
+            className="px-3 py-1.5 border border-gray-200 text-gray-600 rounded-xl text-sm font-semibold hover:bg-gray-50 disabled:opacity-50 transition"
+          >
+            Next
+          </button>
+        </div>
+      )}
+
+      <p className="text-xs text-gray-400 mt-2">
         {q.data?.meta?.total != null ? `${q.data.meta.total} users total` : `${rows.length} shown`}
         {search && ` · ${rows.length} match "${search}"`}
       </p>

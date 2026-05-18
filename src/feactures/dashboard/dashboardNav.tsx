@@ -7,7 +7,6 @@ import {
   MessageSquare,
   PlusCircle,
   List,
-  Sparkles,
   BarChart2,
   Users,
   GitPullRequestIcon,
